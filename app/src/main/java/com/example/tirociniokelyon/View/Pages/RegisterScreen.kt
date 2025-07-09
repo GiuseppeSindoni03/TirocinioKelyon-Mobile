@@ -1,4 +1,6 @@
 package com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages
+
+import android.content.Context
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
@@ -47,6 +49,7 @@ import com.example.tirociniokelyon.com.example.tirociniokelyon.ViewModel.InviteV
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.DTO.AcceptInviteRequest
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Invite
 
+
 object RegisterColors {
     val Primary = Color(0xFF1976D2)
     val blue = Color(0xFF0058CC)
@@ -79,6 +82,7 @@ fun RegisterScreen(
     var cap by remember { mutableStateOf("") }
     var province by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.acceptInviteSuccess) {
         if (uiState.acceptInviteSuccess == true) {
@@ -112,65 +116,63 @@ fun RegisterScreen(
     }
 
 
-        when {
-            uiState.isLoading -> {
-                LoadingComponent ()
-            }
+    when {
+        uiState.isLoading -> {
+            LoadingComponent()
+        }
 
-            uiState.error != null -> {
-                ErrorComponent(error = uiState.error.toString())
-            }
+        uiState.error != null -> {
+            ErrorComponent(error = uiState.error.toString())
+        }
 
-            uiState.invite != null -> {
-                Log.d("DEBUG", "Invito totale: ${uiState.invite}")
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .systemBarsPadding(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    RegisterContent(
-                        invite = uiState.invite!!,
-                        address = address,
-                        city = city,
-                        cap = cap,
-                        province = province,
-                        password = password,
-                        passwordVisible = passwordVisible,
-                        onAddressChange = { address = it },
-                        onCityChange = { city = it },
-                        onCapChange = { cap = it },
-                        onProvinceChange = { province = it },
-                        onPasswordChange = { password = it },
-                        onPasswordVisibilityChange = { passwordVisible = !passwordVisible },
-                        onRegisterClick = {
-                            val acceptInviteRequest = AcceptInviteRequest(
-                                name = uiState.invite!!.name,
-                                surname = uiState.invite!!.surname,
-                                email = uiState.invite!!.email,
-                                cf = uiState.invite!!.cf,
-                                birthDate = uiState.invite!!.birthDate,
-                                gender = uiState.invite!!.gender,
-                                phone = uiState.invite!!.phone,
-                                address = address,
-                                city = city,
-                                cap = cap,
-                                province = province,
-                                password = password
-                            )
-                            viewModel.acceptInvite(inviteId, acceptInviteRequest)
-                        },
-                        isFormValid = address.isNotBlank() &&
-                                city.isNotBlank() &&
-                                cap.isNotBlank() &&
-                                province.isNotBlank() &&
-                                password.isNotBlank()
-                    )
-                }
-                }
-
+        uiState.invite != null -> {
+            Log.d("DEBUG", "Invito totale: ${uiState.invite}")
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                RegisterContent(
+                    invite = uiState.invite!!,
+                    address = address,
+                    city = city,
+                    cap = cap,
+                    province = province,
+                    password = password,
+                    confirmPassword = confirmPassword,
+                    passwordVisible = passwordVisible,
+                    onAddressChange = { address = it },
+                    onCityChange = { city = it },
+                    onCapChange = { cap = it },
+                    onProvinceChange = { province = it },
+                    onPasswordChange = { password = it },
+                    onConfirmPasswordChange = { confirmPassword = it },
+                    onPasswordVisibilityChange = { passwordVisible = !passwordVisible },
+                    onRegisterClick = {
+                        val acceptInviteRequest = AcceptInviteRequest(
+                            name = uiState.invite!!.name,
+                            surname = uiState.invite!!.surname,
+                            email = uiState.invite!!.email,
+                            cf = uiState.invite!!.cf,
+                            birthDate = uiState.invite!!.birthDate,
+                            gender = uiState.invite!!.gender,
+                            phone = uiState.invite!!.phone,
+                            address = address,
+                            city = city,
+                            cap = cap,
+                            province = province,
+                            password = password
+                        )
+                        viewModel.acceptInvite(inviteId, acceptInviteRequest)
+                    },
+                   context = LocalContext.current
+                )
             }
         }
+
+    }
+}
 
 
 @Composable
@@ -181,15 +183,17 @@ private fun RegisterContent(
     cap: String,
     province: String,
     password: String,
+    confirmPassword: String,
     passwordVisible: Boolean,
     onAddressChange: (String) -> Unit,
     onCityChange: (String) -> Unit,
     onCapChange: (String) -> Unit,
     onProvinceChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
+    onConfirmPasswordChange: (String) -> Unit,
     onPasswordVisibilityChange: () -> Unit,
     onRegisterClick: () -> Unit,
-    isFormValid: Boolean
+    context: Context
 ) {
     Column(
         modifier = Modifier
@@ -219,7 +223,17 @@ private fun RegisterContent(
         )
 
         // Sezione dati personali (non modificabili)
-        PersonalDataSection(invite)
+        PersonalDataSection(
+            invite,
+            password = password,
+            passwordVisible = passwordVisible,
+            onPasswordChange = onPasswordChange,
+            onPasswordVisibilityChange = onPasswordVisibilityChange,
+            confirmPassword = confirmPassword,
+            onConfirmPasswordChange = onConfirmPasswordChange
+        )
+
+
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -233,22 +247,28 @@ private fun RegisterContent(
             city = city,
             cap = cap,
             province = province,
-            password = password,
-            passwordVisible = passwordVisible,
+
             onAddressChange = onAddressChange,
             onCityChange = onCityChange,
             onCapChange = onCapChange,
             onProvinceChange = onProvinceChange,
-            onPasswordChange = onPasswordChange,
-            onPasswordVisibilityChange = onPasswordVisibilityChange
-        )
+
+            )
 
         Spacer(modifier = Modifier.height(32.dp))
 
 
         Button(
-            onClick = onRegisterClick,
-            enabled = isFormValid,
+            onClick = {
+
+                val error = validateForm(address, city, cap, province, password, confirmPassword)
+                if (error != null) {
+                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                }
+                else {
+                    onRegisterClick()
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -270,14 +290,51 @@ private fun RegisterContent(
     }
 }
 
+fun validateForm(
+    address: String,
+    city: String,
+    cap: String,
+    province: String,
+    password: String,
+    confirmPassword: String
+): String? {
+    val passwordRegex = Regex("^(?=.*[A-Z])(?=.*\\d)(?=.*[@\$!%*?&])[A-Za-z\\d@\$!%*?&]{8,}$")
+
+    return when {
+        address.isBlank() -> "Inserisci l'indirizzo"
+        city.isBlank() -> "Inserisci la città"
+        cap.isBlank() -> "Inserisci il CAP"
+        province.isBlank() -> "Inserisci la provincia"
+        password.isBlank() -> "Inserisci una password"
+        password.length < 8 -> "La password deve essere di almeno 8 caratteri"
+        !passwordRegex.matches(password) ->
+            "La password deve contenere almeno una lettera maiuscola, un numero e un carattere speciale"
+        password != confirmPassword -> "Le password non coincidono"
+        else -> null
+    }
+}
+
+
+
 @Composable
-private fun PersonalDataSection(invite: Invite) {
+private fun PersonalDataSection(
+    invite: Invite,
+
+    password: String,
+    passwordVisible: Boolean,
+    onPasswordChange: (String) -> Unit,
+    onPasswordVisibilityChange: () -> Unit,
+    confirmPassword: String,
+    onConfirmPasswordChange: (String) -> Unit
+
+
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = Color.White,
 
-        ),
+            ),
         border = BorderStroke(1.dp, RegisterColors.blue),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -314,13 +371,7 @@ private fun PersonalDataSection(invite: Invite) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
 
-            ModernReadOnlyTextField(
-                value = invite.email, // invite.email
-                label = "Email",
-                modifier = Modifier.fillMaxWidth()
-            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -339,6 +390,73 @@ private fun PersonalDataSection(invite: Invite) {
                     modifier = Modifier.weight(1f)
                 )
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ModernReadOnlyTextField(
+                value = invite.email, // invite.email
+                label = "Email",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = "Modificabile",
+                    tint = RegisterColors.Primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Inserisci una password",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = RegisterColors.blue
+
+                )
+            }
+
+
+            ModernTextField(
+                value = password,
+                onValueChange = onPasswordChange,
+                label = "Password",
+                placeholder = "Crea una password sicura",
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    IconButton(onClick = onPasswordVisibilityChange) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = if (passwordVisible) "Nascondi password" else "Mostra password",
+                            tint = RegisterColors.OnSurfaceVariant
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            ModernTextField(
+                value = confirmPassword,
+                onValueChange = onConfirmPasswordChange,
+                label = "Conferma la password",
+                placeholder = "Password",
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    IconButton(onClick = onPasswordVisibilityChange) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = if (passwordVisible) "Nascondi password" else "Mostra password",
+                            tint = RegisterColors.OnSurfaceVariant
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -414,18 +532,16 @@ private fun MedicalDataSection(invite: Invite) {
             }
             Spacer(modifier = Modifier.height(8.dp))
 
-            if(!invite.pathologies.isNullOrEmpty())
+            if (!invite.pathologies.isNullOrEmpty())
                 MedicalNotesSection(title = "Patologie", items = invite.pathologies)
 
             Spacer(modifier = Modifier.height(8.dp))
-            if(!invite.medications.isNullOrEmpty())
+            if (!invite.medications.isNullOrEmpty())
                 MedicalNotesSection(title = "Farmaci", items = invite.medications)
 
             Spacer(modifier = Modifier.height(8.dp))
-            if(!invite.injuries.isNullOrEmpty())
-                 MedicalNotesSection(title = "Infortuni", items = invite.injuries)
-
-
+            if (!invite.injuries.isNullOrEmpty())
+                MedicalNotesSection(title = "Infortuni", items = invite.injuries)
 
 
         }
@@ -448,7 +564,7 @@ private fun MedicalNotesSection(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
 
-    ) {
+        ) {
         Column(modifier = Modifier.padding(20.dp)) {
 
             Text(
@@ -467,15 +583,10 @@ private fun MedicalNotesSection(
                 ) {
                     ModernReadOnlyTextField(value = item, label = "Patologia $count")
 
-//                    Text("•", fontSize = 16.sp, modifier = Modifier.padding(end = 6.dp))
-//                    Text(
-//                        text = item,
-//                        fontSize = 14.sp,
-//                        color = RegisterColors.OnSurfaceVariant
-//                    )
+
                 }
 
-                count  =  count + 1
+                count = count + 1
             }
         }
     }
@@ -488,14 +599,10 @@ private fun EditableDataSection(
     city: String,
     cap: String,
     province: String,
-    password: String,
-    passwordVisible: Boolean,
     onAddressChange: (String) -> Unit,
     onCityChange: (String) -> Unit,
     onCapChange: (String) -> Unit,
     onProvinceChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onPasswordVisibilityChange: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -571,33 +678,10 @@ private fun EditableDataSection(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
 
-            // Password
-            ModernTextField(
-                value = password,
-                onValueChange = onPasswordChange,
-                label = "Password",
-                placeholder = "Crea una password sicura",
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                trailingIcon = {
-                    IconButton(onClick = onPasswordVisibilityChange) {
-                        Icon(
-                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = if (passwordVisible) "Nascondi password" else "Mostra password",
-                            tint = RegisterColors.OnSurfaceVariant
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
         }
     }
 }
-
-
-
 
 
 @Composable
@@ -643,6 +727,7 @@ private fun ModernTextField(
         singleLine = true
     )
 }
+
 @Composable
 private fun ModernReadOnlyTextField(
     value: String,

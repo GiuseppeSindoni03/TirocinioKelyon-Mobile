@@ -27,11 +27,7 @@ import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.Regist
                 color = RegisterColors.Primary,
                 strokeWidth = 3.dp
             )
-            Text(
-                text = "Caricamento dati...",
-                color = RegisterColors.OnSurfaceVariant,
-                fontSize = 14.sp
-            )
+
         }
     }
 }

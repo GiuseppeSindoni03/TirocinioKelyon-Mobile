@@ -70,6 +70,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.ErrorComponent
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.LoadingComponent
 
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @OptIn( ExperimentalGetImage::class)
@@ -398,9 +400,23 @@ fun InviteQRScannerBottomSheet(
                         // Pulsante Continua
                         Button(
                             onClick = {
-                                navController.navigate("register/$scannedInviteId")
-                                showSuccessSheet = false
-                                onDismiss() // Chiude anche il bottom sheet principale
+                                coroutineScope.launch {
+                                    showSuccessSheet = false
+                                    // onDismiss()
+                                    kotlinx.coroutines.delay(100) // attende 100ms (puoi anche fare delay(1) per un frame)
+                                    navController.navigate("register/$scannedInviteId") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                }
+
+//                                navController.navigate("register/$scannedInviteId") {
+//                                    popUpTo("login") {
+//                                        inclusive = true
+//                                    }
+//                                }
+//
+//                                showSuccessSheet = false
+//                                onDismiss() // Chiude anche il bottom sheet principale
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -423,25 +439,12 @@ fun InviteQRScannerBottomSheet(
                     // Stato di caricamento/errore (se necessario)
                     when {
                         uiState.isLoading -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
+                          LoadingComponent()
                         }
 
                         uiState.error != null -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Errore: ${uiState.error}",
-                                    color = Color.Red,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
+                            ErrorComponent(error = uiState.error.toString())
+
                         }
                     }
                 }

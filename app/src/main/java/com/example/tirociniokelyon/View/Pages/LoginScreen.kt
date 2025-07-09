@@ -139,6 +139,7 @@ fun LoginScreen(navController: NavController) {
 
                 // Campo Password
                 OutlinedTextField(
+
                     value = state.password,
                     onValueChange = { viewModel.onPasswordChange(it) },
                     label = { Text("Password") },

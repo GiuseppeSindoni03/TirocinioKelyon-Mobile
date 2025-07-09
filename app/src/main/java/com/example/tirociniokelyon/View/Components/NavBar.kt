@@ -34,8 +34,11 @@ import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
 
 
 data class NavItem(
@@ -65,12 +68,12 @@ fun NavBar(navController: NavController) {
 
     Box {
         NavigationBar(
-            containerColor = Color(0xFF0058CC),
+            containerColor = MaterialTheme.colorScheme.secondary,
             tonalElevation = 8.dp,
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .heightIn(max = 60.dp)
+                .heightIn(max = 70.dp)
         ) {
             items.forEach { item ->
                 val selected = currentRoute == item.route
@@ -103,7 +106,7 @@ fun NavBar(navController: NavController) {
 
         FloatingActionButton(
             onClick = { navController.navigate("insert-medical") },
-            containerColor = Color(0xFF0058CC),
+            containerColor = MaterialTheme.colorScheme.secondary,
             contentColor = Color.White,
             shape = CircleShape,
             modifier = Modifier
@@ -112,5 +115,15 @@ fun NavBar(navController: NavController) {
         ) {
             Icon(Icons.Outlined.Add, contentDescription = "Add")
         }
+    }
+}
+@Preview(showBackground = false, name = "NavBar Preview")
+@Composable
+fun NavBarPreview() {
+    val navController = rememberNavController()
+
+    // Finta composable per test visivo
+    Box(modifier = Modifier.heightIn(max = 100.dp)) {
+        NavBar(navController = navController)
     }
 }

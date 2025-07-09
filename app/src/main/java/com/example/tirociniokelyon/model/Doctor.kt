@@ -9,8 +9,22 @@ data class Doctor(
     val orderProvince: String?,
     val orderDate: String?,
     val orderType: String?,
-
-
+    val user: UserDoctor
 
 )
 
+data class UserDoctor (
+    val id: String,
+    val name: String,
+    val surname: String,
+    val email: String,
+    val birthDate: String,
+    val phone: String,
+    val cf: String,
+    val gender: String,
+    val role: String,
+    val address: String,
+    val city: String,
+    val cap: String,
+    val province: String,
+)

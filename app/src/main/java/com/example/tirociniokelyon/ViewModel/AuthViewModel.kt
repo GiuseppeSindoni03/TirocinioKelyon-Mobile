@@ -23,8 +23,8 @@ class AuthViewModel @Inject constructor(
 ) : ViewModel() {
 
     data class UiState(
-        val email: String = "",
-        val password: String = "",
+        val email: String = "g@gmail.com",
+        val password: String = "Giuseppe1!",
         val passwordIsVisible: Boolean= false,
         val isLoading: Boolean = false,
         val error: String? = null
@@ -33,7 +33,8 @@ class AuthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState
 
-    val currentUser: StateFlow<User?> = sessionManager.user
+    val currentUser : StateFlow<User?> = sessionManager.user
+
 
     fun onEmailChange(email: String) {
         _uiState.update { it.copy(email = email) }
@@ -67,25 +68,22 @@ class AuthViewModel @Inject constructor(
         _uiState.update { it.copy(error = message) }
     }
 
-    fun getMe (onSuccess: (User) -> Unit) {
-        viewModelScope.launch {
-            try {
-                val result = repository.getMe()
-                kotlinx.coroutines.withContext(Dispatchers.Main) {
-                    onSuccess(result.getOrThrow())
-                }
-            } catch (e: Exception) {
-                Log.d("DEBUG", "${e.message}")
-                kotlinx.coroutines.withContext(Dispatchers.Main) {
-                    _uiState.update {it.copy(error = "${e.message}")
-                    }
-            }
-        }
-    }
-
-
-
-}
+//    fun getMe (onSuccess: (User) -> Unit) {
+//        viewModelScope.launch {
+//            try {
+//                val result = repository.getMe()
+//                kotlinx.coroutines.withContext(Dispatchers.Main) {
+//                    onSuccess(result.getOrThrow())
+//                }
+//            } catch (e: Exception) {
+//                Log.d("DEBUG", "${e.message}")
+//                kotlinx.coroutines.withContext(Dispatchers.Main) {
+//                    _uiState.update {it.copy(error = "${e.message}")
+//                    }
+//            }
+//        }
+//    }
+//}
 
 
     fun logout (onSuccess: () -> Unit) {

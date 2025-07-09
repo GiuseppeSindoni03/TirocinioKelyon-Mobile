@@ -7,6 +7,8 @@ data class User(
     val id: String,
     val name: String,
     val surname: String,
+    val email: String,
+    val birthDate: String,
     val cf: String,
     val gender: String,
     val phone: String,
@@ -16,9 +18,5 @@ data class User(
     val cap: String,
     val province: String,
     val patient : Patient,
-    val doctor: Doctor
-
-
-
 )
 

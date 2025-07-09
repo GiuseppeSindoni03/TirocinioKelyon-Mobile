@@ -12,8 +12,6 @@ interface APIAuth {
     @POST("auth/signin")
     suspend fun signIn(@Body() credentialsDTO: SignInCredentialsDTO) : Response<User>
 
-    @GET("user/me")
-    suspend fun getMe() : Response<User>
 
     @POST("auth/logout")
     suspend fun logout() : Response<Unit>

@@ -11,7 +11,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import com.example.tirociniokelyon.BuildConfig
 import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.ApiConstants
-import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.SessionCookieJar
+import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.AuthInterceptor
+import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.PersistentCookieJar
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -31,9 +32,10 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(loggingInterceptor: HttpLoggingInterceptor, cookieJar: SessionCookieJar): OkHttpClient {
+    fun provideOkHttpClient(loggingInterceptor: HttpLoggingInterceptor, cookieJar: PersistentCookieJar, authInterceptor: AuthInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
+            .addInterceptor(authInterceptor)
             .cookieJar(cookieJar = cookieJar)
             .build()
     }
@@ -60,4 +62,15 @@ object NetworkModule {
         return retrofit.create(APIinvite::class.java)
     }
 
+    @Provides
+    @Singleton
+    fun provideAPIpatient(retrofit: Retrofit): APIpatient {
+        return retrofit.create(APIpatient::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAPIuser(retrofit: Retrofit): APIuser {
+        return retrofit.create(APIuser::class.java)
+    }
 }
