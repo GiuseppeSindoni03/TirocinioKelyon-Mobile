@@ -2,9 +2,12 @@ package com.example.tirociniokelyon.com.example.tirociniokelyon.remote.Repositor
 
 import android.util.Log
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Doctor
+import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Reservation
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.User
 import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.APIpatient
+import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.APIreservation
 import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.APIuser
+import com.google.android.gms.common.api.Response
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -13,9 +16,27 @@ import javax.inject.Singleton
 @Singleton
 class UserRepository @Inject constructor(
     private val apiUser: APIuser,
-    private  val apiPatient: APIpatient
+    private  val apiPatient: APIpatient,
+    private val apiReservation: APIreservation
 
 ) {
+
+    suspend fun getNextReservation(): Result<Reservation?> {
+        return try {
+            val response = apiReservation.getNextReservation()
+
+            if (response.isSuccessful) {
+                val reservation = response.body()
+                Result.success(reservation)
+            } else {
+                Result.failure(Exception("Errore HTTP: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Log.d("DEBUG", "Errore: $e")
+            Result.failure(e)
+        }
+    }
+
 
 
     suspend fun getMe(): Result<User> {
