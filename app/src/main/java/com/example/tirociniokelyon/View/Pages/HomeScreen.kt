@@ -2,21 +2,16 @@ package com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages
 
 
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
-import java.util.Locale
+
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
+
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Scaffold
@@ -26,15 +21,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
 
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+
+import androidx.compose.material.icons.filled.MonitorHeart
+import androidx.compose.material.icons.outlined.FitnessCenter
+
 import androidx.compose.material3.MaterialTheme
 
 
@@ -44,24 +37,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
-
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.ActivityItem
 
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.DoctorInfoCard
 
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.ErrorComponent
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.LoadingComponent
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.NavBar
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.RecentActivitiesSection
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.SetEdgeToEdgeSystemBars
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.SetSystemBarStyle
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.ShortCuts
 import com.example.tirociniokelyon.com.example.tirociniokelyon.ViewModel.HomeViewModel
-import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Doctor
-import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Reservation
-import com.example.tirociniokelyon.com.example.tirociniokelyon.model.UserDoctor
-import java.time.ZonedDateTime
-import java.util.Date
+
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -151,36 +140,23 @@ fun HomeScreen(
                     ) {
 
                         DoctorInfoCard(doctor = uiState.doctor!!)
-                        
+
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        ShortCuts()
 
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
+                        val activities = listOf(
+                            ActivityItemFactory.createBloodPressureActivity(),
+                            ActivityItemFactory.createWeightActivity(),
+                            ActivityItemFactory.createHeartRateActivity(),
 
-                            item {
-                                Text(
-                                    text = "Attivita' recenti",
-                                    color = Color.Black,
-                                    style = MaterialTheme.typography.titleLarge,
-                                )
-                            }
+                        )
 
-
-                            if (uiState.reservation != null) {
-                                item {
-                                    NextReservationCard(
-                                        reservation = uiState.reservation!!,
-                                        doctor = uiState.doctor!!
-                                    )
-                                }
-                            }
-
-                        }
+                       RecentActivitiesSection(
+                           activities = activities
+                       )
 
                     }
 
@@ -195,132 +171,37 @@ fun HomeScreen(
     }
 }
 
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun NextReservationCard(
-    reservation: Reservation,
-    doctor: Doctor,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.background
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxHeight()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(12.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.CalendarMonth,
-                    contentDescription = "Calendario",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Column (modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Appuntamento confermato",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = formatDateTime(reservation.startDate.toString()),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.secondary,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-        }
-
-
-    }
-}
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-private fun formatDateTime(dateTime: String): String {
-    return try {
-        // Pattern per il formato in ingresso: "Sat Jul 12 10:30:00 GMT+2:00 2025"
-        val inputFormatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss 'GMT'xxx yyyy", Locale.ENGLISH)
-
-        // Parsing della data con timezone
-        val zonedDateTime = ZonedDateTime.parse(dateTime, inputFormatter)
-
-        // Formatter per il formato desiderato in italiano
-        val outputFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm", Locale.ITALIAN)
-
-        // Formattazione della data
-        zonedDateTime.format(outputFormatter)
-    } catch (e: DateTimeParseException) {
-        // Gestione errori di parsing
-        "Data non valida"
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun NextReservationCardPreview() {
-
-    val user = UserDoctor(
-        id = "1",
-        name = "Mario",
-        surname = "Rossi",
-        email = "mario.rossi@example.com",
-        birthDate = "1990-01-01",
-        cf = "RSSMRA90A01H501Z",
-        gender = "M",
-        phone = "1234567890",
-        role = "DOCTOR",
-        address = "Via Roma",
-        city = "Napoli",
-        cap = "80100",
-        province = "NA",
+object ActivityItemFactory {
+    fun createBloodPressureActivity(
+        systolic: Int = 120,
+        diastolic: Int = 80,
+        status: String = "Normale"
+    ) = ActivityItem(
+        id = "blood_pressure",
+        icon = Icons.Filled.MonitorHeart,
+        title = "Pressione registrata",
+        description = "$systolic/$diastolic mmHg - $status"
     )
 
-    val doctor = Doctor(
-        userId = "1",
-        orderType = "",
-        orderProvince = "",
-        orderDate = "",
-        registrationNumber = "",
-        medicalOffice = "",
-        specialization = "",
-        user = user
+    fun createHeartRateActivity(
+        bpm: Int = 72,
+        status: String = "Normale"
+    ) = ActivityItem(
+        id = "heart_rate",
+        icon = Icons.Default.Favorite,
+        title = "Frequenza cardiaca",
+        description = "$bpm bpm - $status"
     )
 
-    val reservation = Reservation(
-        id = "res1",
-        status = "CONFIRMED",
-        createAt = Date(),
-        startDate = Date(),
-        endDate = Date(Date().time + 30 * 60 * 1000), // +30 minuti
-        visitType = "Controllo Generico"
+    fun createWeightActivity(
+        weight: Double = 70.5,
+        unit: String = "kg"
+    ) = ActivityItem(
+        id = "weight",
+        icon = Icons.Outlined.FitnessCenter,
+        title = "Peso registrato",
+        description = "$weight $unit"
     )
 
-    MaterialTheme {
-        NextReservationCard(
-            reservation = reservation,
-            doctor = doctor
-        )
-    }
+
 }

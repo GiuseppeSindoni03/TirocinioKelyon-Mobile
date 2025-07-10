@@ -29,6 +29,7 @@ import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.HomeSc
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.InviteQRScannerBottomSheet
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.LoginScreen
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.RegisterScreen
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.ReservationScreen
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.UserProfile
 import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.UserSessionManager
 import com.example.tirociniokelyon.ui.theme.TirocinioKelyonTheme
@@ -41,11 +42,12 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var userSessionManager: UserSessionManager
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            TirocinioKelyonTheme (   dynamicColor = false) {
+            TirocinioKelyonTheme(dynamicColor = false) {
 
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -61,9 +63,8 @@ class MainActivity : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MyApp (userSessionManager: UserSessionManager, forceLogin: Boolean = false) {
+fun MyApp(userSessionManager: UserSessionManager, forceLogin: Boolean = false) {
     val navController = rememberNavController()
-
 
 
     var startDestination by remember { mutableStateOf<String?>(null) }
@@ -83,10 +84,9 @@ fun MyApp (userSessionManager: UserSessionManager, forceLogin: Boolean = false) 
         }
     }
 
-    if(isLoading || startDestination == null) {
+    if (isLoading || startDestination == null) {
         LoadingComponent()
-    }
-    else {
+    } else {
 
         NavHost(navController = navController, startDestination = startDestination!!) {
             composable("login") {
@@ -95,7 +95,7 @@ fun MyApp (userSessionManager: UserSessionManager, forceLogin: Boolean = false) 
 
 
             composable("home") {
-                HomeScreen(navController,)
+                HomeScreen(navController)
             }
 
             composable("user-profile") {
@@ -114,7 +114,7 @@ fun MyApp (userSessionManager: UserSessionManager, forceLogin: Boolean = false) 
             }
 
             composable(
-                route= "insert-medical"
+                route = "insert-medical"
 
             ) {
                 HomeScreen(navController = navController)
@@ -122,7 +122,7 @@ fun MyApp (userSessionManager: UserSessionManager, forceLogin: Boolean = false) 
 
 
             composable(
-                route= "medical-detection"
+                route = "medical-detection"
 
             ) {
                 HomeScreen(navController = navController)
@@ -130,16 +130,16 @@ fun MyApp (userSessionManager: UserSessionManager, forceLogin: Boolean = false) 
 
 
             composable(
-                route= "reservation"
+                route = "reservation"
 
             ) {
-                HomeScreen(navController = navController)
+                ReservationScreen(navController = navController)
             }
 
 
         }
-    }
 
+    }
 }
 
 

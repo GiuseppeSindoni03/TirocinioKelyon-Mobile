@@ -5,10 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Doctor
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Reservation
-import com.example.tirociniokelyon.com.example.tirociniokelyon.model.User
 import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.Repository.ReservationRepository
 import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.Repository.UserRepository
-import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.UserSessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,24 +15,25 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
+enum class ReservationStatus {
+    CONFIRMED, DECLINED, PENDING
+}
+data class UiState(
+    val nextReservation: Reservation? = null,
+    val confirmedReservation: Array<Reservation>? = null,
+    val doctor: Doctor? = null,
+    val status: ReservationStatus = ReservationStatus.CONFIRMED,
+    val isLoading: Boolean = false,
+    val error: String? = null
+
+)
+
 @HiltViewModel
-class HomeViewModel @Inject constructor(
-    private val sessionManager: UserSessionManager,
-    private val repository: UserRepository,
-    private val reservationRepository: ReservationRepository
-) : ViewModel() {
 
-    val currentUser: StateFlow<User?> = sessionManager.user
-
-
-
-    data class UiState(
-        val user: User? = null,
-        val doctor: Doctor? = null,
-        val reservation: Reservation? = null,
-        val isLoading: Boolean = false,
-        val error: String? = null
-    )
+class ReservationViewModel @Inject constructor(private val repository: ReservationRepository,
+    private val userRepository: UserRepository
+    ): ViewModel(){
 
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState
@@ -42,31 +41,40 @@ class HomeViewModel @Inject constructor(
 
 
     init {
-        loadDoctor()
-        loadReservation()
-    }
-    
-    fun getMe(): User? {
-        return currentUser.value
+      loadNextReservation()
+        loadReservations(uiState.value.status)
+      loadDoctor()
     }
 
-    private fun loadReservation() {
+    private fun loadReservations(status: ReservationStatus) {
         _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             try {
-                val result = reservationRepository.getNextReservation()
+                val result = repository.getReservations(status)
+            } catch (e: Exception) {
+
+            }
+        }
+
+    }
+
+    private fun loadNextReservation() {
+        _uiState.update { it.copy(isLoading = true, error = null) }
+        viewModelScope.launch {
+            try {
+                val result = repository.getNextReservation()
                 result.fold(
                     onSuccess = { reservation ->
                         _uiState.update {
                             it.copy(
-                                reservation = reservation,
+                                nextReservation  = reservation,
                                 isLoading = false,
                                 error = null
                             )
                         }
                     },
                     onFailure = { exception ->
-                        Log.e("HomeViewModel", "Errore nel caricamento del dottore", exception)
+                        Log.e("DEBUG", "Errore nel caricamento del dottore", exception)
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -77,7 +85,7 @@ class HomeViewModel @Inject constructor(
                 )
 
             } catch (e: Exception) {
-                Log.d("DEBUG", "${e.message}")
+                Log.d("DEBUG", "LoadNextReservation ${e.message}")
                 kotlinx.coroutines.withContext(Dispatchers.Main) {
                     _uiState.update {
                         it.copy(error = "${e.message}")
@@ -87,11 +95,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+
     private fun loadDoctor() {
         _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             try {
-                val result = repository.getDoctor()
+                val result = userRepository.getDoctor()
 
                 result.fold(
                     onSuccess = { doctor ->
@@ -104,7 +113,7 @@ class HomeViewModel @Inject constructor(
                         }
                     },
                     onFailure = { exception ->
-                        Log.e("HomeViewModel", "Errore nel caricamento del dottore", exception)
+                        Log.e("DEBUG", "Errore nel caricamento del dottore", exception)
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -124,8 +133,5 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
 }
-
-
-
-

@@ -17,25 +17,10 @@ import javax.inject.Singleton
 class UserRepository @Inject constructor(
     private val apiUser: APIuser,
     private  val apiPatient: APIpatient,
-    private val apiReservation: APIreservation
 
 ) {
 
-    suspend fun getNextReservation(): Result<Reservation?> {
-        return try {
-            val response = apiReservation.getNextReservation()
 
-            if (response.isSuccessful) {
-                val reservation = response.body()
-                Result.success(reservation)
-            } else {
-                Result.failure(Exception("Errore HTTP: ${response.code()}"))
-            }
-        } catch (e: Exception) {
-            Log.d("DEBUG", "Errore: $e")
-            Result.failure(e)
-        }
-    }
 
 
 

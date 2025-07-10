@@ -59,7 +59,7 @@ fun NavBar(navController: NavController) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
     val items = listOf(
-        NavItem("home", Icons.Outlined.Dashboard, Icons.Filled.Home),
+        NavItem("home", Icons.Outlined.Home, Icons.Filled.Home),
         NavItem("reservation", Icons.Outlined.CalendarMonth, Icons.Filled.CalendarMonth),
         NavItem("medical-detection", Icons.Outlined.MonitorHeart, Icons.Filled.MonitorHeart),
         NavItem("user-profile", Icons.Outlined.Person, Icons.Filled.Person),
