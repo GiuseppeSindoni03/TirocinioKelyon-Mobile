@@ -45,11 +45,11 @@ fun DoctorInfoCard(doctor: Doctor) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(8.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         )
     ) {
         Column(
@@ -57,12 +57,10 @@ fun DoctorInfoCard(doctor: Doctor) {
                 .fillMaxWidth()
                 .padding(20.dp)
         ) {
-            // Header del dottore
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Foto profilo
                 Card(
                     modifier = Modifier.size(80.dp),
                     shape = CircleShape,
@@ -70,15 +68,7 @@ fun DoctorInfoCard(doctor: Doctor) {
                 ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        Color.White,
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                                    )
-                                )
-                            ),
+                            .fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         // Se hai un'immagine del dottore, sostituisci con AsyncImage
@@ -95,8 +85,9 @@ fun DoctorInfoCard(doctor: Doctor) {
                 ) {
                     Text(
                         text = "Dr. ${doctor.user.name} ${doctor.user.surname}",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
                     )
 
                     doctor.specialization?.let { specialization ->

@@ -16,8 +16,13 @@ val Typography = Typography(
     ),
     titleLarge = TextStyle(
         fontFamily = InterFontFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp,
+    ),
+    titleMedium = TextStyle(
+        fontFamily = InterFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 22.sp,
+        fontSize = 20.sp,
     ),
     bodyLarge = TextStyle(
         fontFamily = InterFontFamily,

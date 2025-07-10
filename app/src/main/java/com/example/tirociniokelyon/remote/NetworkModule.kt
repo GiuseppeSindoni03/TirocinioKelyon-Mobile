@@ -73,4 +73,11 @@ object NetworkModule {
     fun provideAPIuser(retrofit: Retrofit): APIuser {
         return retrofit.create(APIuser::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideAPIreservation(retrofit: Retrofit): APIreservation {
+        return retrofit.create(APIreservation::class.java)
+    }
 }
+

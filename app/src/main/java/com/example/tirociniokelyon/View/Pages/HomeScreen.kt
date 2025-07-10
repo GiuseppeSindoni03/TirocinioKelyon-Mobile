@@ -1,15 +1,13 @@
 package com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages
 
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.util.Locale
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,10 +15,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,40 +27,28 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.MedicalServices
+import androidx.compose.material.icons.filled.CalendarMonth
 
-import androidx.compose.material.icons.filled.Message
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 
 
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+
 
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.tirociniokelyon.R
+
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.DoctorInfoCard
 
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.ErrorComponent
@@ -72,17 +58,10 @@ import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.S
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.SetSystemBarStyle
 import com.example.tirociniokelyon.com.example.tirociniokelyon.ViewModel.HomeViewModel
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Doctor
-import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Patient
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Reservation
-import com.example.tirociniokelyon.com.example.tirociniokelyon.model.User
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.UserDoctor
-import com.example.tirociniokelyon.ui.theme.TirocinioKelyonTheme
-import java.time.LocalDate
-
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.time.ZonedDateTime
+import java.util.Date
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -165,30 +144,47 @@ fun HomeScreen(
 
 
                 else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
                     ) {
-                        // Informazioni del dottore
-                        uiState.doctor?.let { doctor ->
-                            item {
-                                DoctorInfoCard(doctor = doctor)
-                            }
-                        }
 
-                        // Prossima prenotazione
-                        if (uiState.reservation != null && uiState.doctor != null) {
+                        DoctorInfoCard(doctor = uiState.doctor!!)
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+
+
+
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+
                             item {
-                                NextReservationSection(
-                                    reservation = uiState.reservation!!,
-                                    doctor = uiState.doctor!!
+                                Text(
+                                    text = "Attivita' recenti",
+                                    color = Color.Black,
+                                    style = MaterialTheme.typography.titleLarge,
                                 )
                             }
+
+
+                            if (uiState.reservation != null) {
+                                item {
+                                    NextReservationCard(
+                                        reservation = uiState.reservation!!,
+                                        doctor = uiState.doctor!!
+                                    )
+                                }
+                            }
+
                         }
 
-                        // Altre sezioni potrebbero essere aggiunte qui
                     }
+
+
                 }
 
 
@@ -196,31 +192,11 @@ fun HomeScreen(
         }
 
 
-    } }
-
-
-@Composable
-private fun NextReservationSection(
-    reservation: Reservation,
-    doctor: Doctor
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text(
-            text = "Prossima prenotazione",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        NextReservationCard(
-            reservation = reservation,
-            doctor = doctor
-        )
     }
 }
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NextReservationCard(
     reservation: Reservation,
@@ -232,129 +208,119 @@ fun NextReservationCard(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.background
         )
     ) {
-        Column(
+        Row(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxHeight()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Header con nome del dottore
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Dr. ${doctor.user.name} ${doctor.user.surname}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
 
-            }
-
-
-
-            Spacer(
-                modifier = Modifier.padding(vertical = 8.dp),
-
-            )
-
-            // Dettagli della prenotazione
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-//                    Text(
-//                        text = "Data",
-//                        style = MaterialTheme.typography.labelMedium,
-//                        color = MaterialTheme.colorScheme.onSurfaceVariant
-//                    )
-//                    Text(
-//                        text = formatDate(reservation.date),
-//                        style = MaterialTheme.typography.bodyMedium,
-//                        color = MaterialTheme.colorScheme.onSurface
-//                    )
-                }
-
-                Column {
-//                    Text(
-//                        text = "Orario",
-//                        style = MaterialTheme.typography.labelMedium,
-//                        color = MaterialTheme.colorScheme.onSurfaceVariant
-//                    )
-//                    Text(
-//                        text = formatTime(reservation.time),
-//                        style = MaterialTheme.typography.bodyMedium,
-//                        color = MaterialTheme.colorScheme.onSurface
-//                    )
-                }
-
-                Column {
-                    Text(
-                        text = "Durata",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "${reservation.startDate} min",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            // Tipo di visita se disponibile
-            reservation.visitType?.let { visitType ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MedicalServices,
-                        contentDescription = "Tipo di visita",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = visitType,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            // Pulsante di azione
-            Button(
-                onClick = { /* Azione per gestire la prenotazione */ },
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                    .size(60.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Visualizza dettagli",
-                    style = MaterialTheme.typography.labelLarge
+                Icon(
+                    imageVector = Icons.Filled.CalendarMonth,
+                    contentDescription = "Calendario",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
                 )
             }
+            Column (modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Appuntamento confermato",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = formatDateTime(reservation.startDate.toString()),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
         }
+
+
     }
 }
 
-//private fun formatDate(date: LocalDate): String {
-//    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ITALIAN)
-//    return date.format(formatter)
-//}
-//
-//private fun formatTime(time: LocalTime): String {
-//    val formatter = DateTimeFormatter.ofPattern("HH:mm")
-//    return time.format(formatter)
-//}
+
+@RequiresApi(Build.VERSION_CODES.O)
+private fun formatDateTime(dateTime: String): String {
+    return try {
+        // Pattern per il formato in ingresso: "Sat Jul 12 10:30:00 GMT+2:00 2025"
+        val inputFormatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss 'GMT'xxx yyyy", Locale.ENGLISH)
+
+        // Parsing della data con timezone
+        val zonedDateTime = ZonedDateTime.parse(dateTime, inputFormatter)
+
+        // Formatter per il formato desiderato in italiano
+        val outputFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm", Locale.ITALIAN)
+
+        // Formattazione della data
+        zonedDateTime.format(outputFormatter)
+    } catch (e: DateTimeParseException) {
+        // Gestione errori di parsing
+        "Data non valida"
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true)
+@Composable
+fun NextReservationCardPreview() {
+
+    val user = UserDoctor(
+        id = "1",
+        name = "Mario",
+        surname = "Rossi",
+        email = "mario.rossi@example.com",
+        birthDate = "1990-01-01",
+        cf = "RSSMRA90A01H501Z",
+        gender = "M",
+        phone = "1234567890",
+        role = "DOCTOR",
+        address = "Via Roma",
+        city = "Napoli",
+        cap = "80100",
+        province = "NA",
+    )
+
+    val doctor = Doctor(
+        userId = "1",
+        orderType = "",
+        orderProvince = "",
+        orderDate = "",
+        registrationNumber = "",
+        medicalOffice = "",
+        specialization = "",
+        user = user
+    )
+
+    val reservation = Reservation(
+        id = "res1",
+        status = "CONFIRMED",
+        createAt = Date(),
+        startDate = Date(),
+        endDate = Date(Date().time + 30 * 60 * 1000), // +30 minuti
+        visitType = "Controllo Generico"
+    )
+
+    MaterialTheme {
+        NextReservationCard(
+            reservation = reservation,
+            doctor = doctor
+        )
+    }
+}
