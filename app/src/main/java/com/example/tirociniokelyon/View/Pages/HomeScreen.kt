@@ -155,6 +155,7 @@ fun HomeScreen(
                         )
 
                        RecentActivitiesSection(
+                           reservation = uiState.reservation,
                            activities = activities
                        )
 

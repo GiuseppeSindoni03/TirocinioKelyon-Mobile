@@ -6,7 +6,7 @@ data class Reservation (
     val id: String,
     val status: String,
     val createAt: Date,
-    val startDate: Date,
-    val endDate: Date,
+    val startTime: Date,
+    val endTime: Date,
     val visitType: String
     )

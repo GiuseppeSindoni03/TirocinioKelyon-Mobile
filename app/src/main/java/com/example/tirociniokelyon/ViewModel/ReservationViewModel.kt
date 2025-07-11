@@ -13,15 +13,23 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Calendar
+import java.util.Date
 import javax.inject.Inject
 
 
 enum class ReservationStatus {
     CONFIRMED, DECLINED, PENDING
 }
+
+fun createDate(day: Int, month: Int, year: Int, hour: Int, minute: Int): Date {
+    val calendar = Calendar.getInstance()
+    calendar.set(year, month - 1, day, hour, minute, 0) // month è 0-based
+    return calendar.time
+}
 data class UiState(
     val nextReservation: Reservation? = null,
-    val confirmedReservation: Array<Reservation>? = null,
+    val reservations: List<Reservation>? = null,
     val doctor: Doctor? = null,
     val status: ReservationStatus = ReservationStatus.CONFIRMED,
     val isLoading: Boolean = false,
@@ -42,7 +50,7 @@ class ReservationViewModel @Inject constructor(private val repository: Reservati
 
     init {
       loadNextReservation()
-        loadReservations(uiState.value.status)
+//        loadReservations(uiState.value.status)
       loadDoctor()
     }
 

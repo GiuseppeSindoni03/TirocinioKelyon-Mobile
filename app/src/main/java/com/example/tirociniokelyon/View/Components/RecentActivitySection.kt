@@ -39,7 +39,7 @@ data class ActivityItem(
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RecentActivitiesSection(
-    title: String = "Attivita' recenti",
+    title: String = "Attività recenti",
     reservation: Reservation? = null,
     activities: List<ActivityItem> = emptyList(),
     modifier: Modifier = Modifier,

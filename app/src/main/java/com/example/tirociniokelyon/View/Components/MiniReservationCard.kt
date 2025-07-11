@@ -1,16 +1,29 @@
 package com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components
 
-
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,47 +31,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Doctor
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Reservation
 import java.text.SimpleDateFormat
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.*
-
+import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NextReservation (reservation: Reservation, doctor: Doctor) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, start = 16.dp, end = 16.dp),
-        horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.Top
-    ) {
-        Text(
-            text = "Prossimo appuntamento",
-            modifier = Modifier
-                .padding(top = 8.dp),
-            style = MaterialTheme.typography.titleLarge,
-            color = Color.Black,
-        )
-
-        ReservationCard(reservation = reservation, doctor = doctor)
-
-
-
-    }
-
-
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun ReservationCard(
+fun MiniReservationCard(
     reservation: Reservation,
     doctor: Doctor,
     modifier: Modifier = Modifier
@@ -75,133 +56,129 @@ fun ReservationCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(160.dp)
-            .padding(top = 8.dp),
+            .height(80.dp)
+            .padding(top = 4.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 8.dp,
-
+            defaultElevation = 4.dp
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize(),
-
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Date Box
             Box(
                 modifier = Modifier
-                    .height(160.dp)
+                    .height(80.dp)
                     .width(80.dp)
                     .clip(
                         RoundedCornerShape(
-                            topStart = 8.dp,
+                            topStart = 6.dp,
                             topEnd = 0.dp,
                             bottomEnd = 0.dp,
-                            bottomStart = 8.dp
+                            bottomStart = 6.dp
                         )
                     )
                     .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.TopCenter
+                contentAlignment = Alignment.Center
             ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(top = 12.dp)
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = day,
                         color = Color.White,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = month,
                         color = Color.White,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
             // Content
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(top = 6.dp, bottom = 6.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.Start
+//                    .weight(1f)
+                    .padding(top = 6.dp, start = 4.dp, bottom = 6.dp),
+                verticalArrangement = Arrangement.SpaceEvenly
             ) {
 
-                val visitType =
-                    if (reservation.visitType == "FIRST_VISIT") "Prima visita" else "Visita di controllo"
+                val visitType = if (reservation.visitType == "FIRST_VISIT") "Prima visita" else "Controllo"
                 Text(
                     text = visitType,
-                    style = MaterialTheme.typography.displayLarge,
-//                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-
                 // Doctor name
                 Text(
                     text = "Dr. ${doctor.user.name} ${doctor.user.surname}",
-                    style = MaterialTheme.typography.titleMedium,
-//                    fontWeight = FontWeight.,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                // Time and Address
+                // Time
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-
-                    Box(
-                        modifier = Modifier
-                            .size(16.dp),
-                        contentAlignment = Alignment.Center
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(imageVector = Icons.Outlined.AccessTime, contentDescription = "clock")
+
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(imageVector = Icons.Outlined.AccessTime, contentDescription = "clock")
+
+                            }
+                            Text(
+                                text = time,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+
+
+
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(imageVector = Icons.Outlined.LocationOn, contentDescription = "clock")
+
+                            }
+                            Text(
+                                text = doctor.medicalOffice.toString(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+
 
                     }
+                     }
 
-                    Text(
-                        text = time, style = MaterialTheme.typography.bodyLarge,
-                        color = Color.Gray
-                    )
-
-
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(imageVector = Icons.Outlined.LocationOn, contentDescription = "clock")
-
-                    }
-                    Text(
-                        text = doctor.medicalOffice.toString(),
-                        style = MaterialTheme.typography.bodyLarge, color = Color.Gray,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
 
 
             }

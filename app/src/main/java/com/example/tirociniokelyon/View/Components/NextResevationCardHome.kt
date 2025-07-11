@@ -21,7 +21,7 @@ fun NextReservationCardHome(
     GenericCard(
         icon = Icons.Filled.CalendarMonth,
         title = "Appuntamento confermato",
-        description = formatDateTime(reservation.startDate.toString()),
+        description = formatDateTime(reservation.startTime.toString()),
         modifier = modifier
     )
 }
