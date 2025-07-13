@@ -10,3 +10,9 @@ data class Reservation (
     val endTime: Date,
     val visitType: String
     )
+
+
+data class Slot (
+    val startTime: Date,
+    val endTime: Date
+)

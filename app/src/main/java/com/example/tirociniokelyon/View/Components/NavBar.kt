@@ -1,5 +1,6 @@
 package com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
@@ -58,13 +59,18 @@ fun NavBar(navController: NavController) {
 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
+    Log.d("DEBUG", "Current Route: $currentRoute")
+
     val items = listOf(
         NavItem("home", Icons.Outlined.Home, Icons.Filled.Home),
-        NavItem("reservation", Icons.Outlined.CalendarMonth, Icons.Filled.CalendarMonth),
-        NavItem("medical-detection", Icons.Outlined.MonitorHeart, Icons.Filled.MonitorHeart),
+        NavItem("reservation/list", Icons.Outlined.CalendarMonth, Icons.Filled.CalendarMonth),
+        NavItem("medical-detection/list", Icons.Outlined.MonitorHeart, Icons.Filled.MonitorHeart),
         NavItem("user-profile", Icons.Outlined.Person, Icons.Filled.Person),
 
     )
+
+    val fabScreens = listOf("reservation/list", "medical-detection/list")
+    val showFab = currentRoute in fabScreens
 
     Box {
         NavigationBar(
@@ -104,17 +110,28 @@ fun NavBar(navController: NavController) {
             }
         }
 
-        FloatingActionButton(
-            onClick = { navController.navigate("insert-medical") },
-            containerColor = MaterialTheme.colorScheme.secondary,
-            contentColor = Color.White,
-            shape = CircleShape,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset(y = (-20).dp)
-        ) {
-            Icon(Icons.Outlined.Add, contentDescription = "Add")
+        if (showFab) {
+            FloatingActionButton(
+                onClick = {
+                    when (currentRoute) {
+                        "reservation/list" -> navController.navigate("reservation/add")
+                        "medical-detection/list" -> navController.navigate("medical-detection/add")
+                    }
+                },
+
+
+
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = Color.White,
+                shape = CircleShape,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-20).dp)
+            ) {
+                Icon(Icons.Outlined.Add, contentDescription = "Add")
+            }
         }
+
     }
 }
 @Preview(showBackground = false, name = "NavBar Preview")

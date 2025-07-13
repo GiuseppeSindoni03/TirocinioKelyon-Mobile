@@ -24,7 +24,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.LoadingComponent
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.AddReservationScreen
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.HomeScreen
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.InviteQRScannerBottomSheet
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.LoginScreen
@@ -121,20 +123,36 @@ fun MyApp(userSessionManager: UserSessionManager, forceLogin: Boolean = false) {
             }
 
 
-            composable(
+            navigation(
+                startDestination =" medical-detection/list",
                 route = "medical-detection"
 
             ) {
-                HomeScreen(navController = navController)
+                composable("medical-detection/list") {
+                    HomeScreen(navController = navController)
+
+                }
+
+
+
             }
 
 
-            composable(
-                route = "reservation"
+            navigation(startDestination ="reservation/list"
+,                route = "reservation"
 
             ) {
-                ReservationScreen(navController = navController)
+                composable("reservation/list") {
+                    ReservationScreen(navController = navController)
+
+                }
+
+                composable("reservation/add" ) {
+                    AddReservationScreen(navController = navController)
+                }
             }
+
+
 
 
         }

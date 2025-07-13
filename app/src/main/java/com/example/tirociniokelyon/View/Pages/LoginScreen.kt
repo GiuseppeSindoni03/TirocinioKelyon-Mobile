@@ -101,13 +101,7 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(100.dp))
 
-            // Card contenitore per i campi di input
-//            Card(
-//                modifier = Modifier.fillMaxWidth(),
-//                shape = RoundedCornerShape(16.dp),
-//                colors = CardDefaults.cardColors(containerColor = Color.White),
-//                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-//            ) {
+
             Column(
                 modifier = Modifier.padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -172,7 +166,6 @@ fun LoginScreen(navController: NavController) {
                     )
                 )
 
-                // Messaggio di errore
                 if (state.error != null) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -226,13 +219,7 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(140.dp))
 
-//            // Sezione registrazione
-//            Card(
-//                modifier = Modifier.fillMaxWidth(),
-//                shape = RoundedCornerShape(12.dp),
-//                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA)),
-//                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-//            ) {
+
             Column(
                 modifier = Modifier
                     .padding(20.dp)

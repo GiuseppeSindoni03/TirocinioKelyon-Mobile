@@ -143,7 +143,9 @@ fun HomeScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        ShortCuts()
+                        ShortCuts(
+                            onBookVisitClick = {navController.navigate("reservation/add")}
+                        )
 
                         Spacer(modifier = Modifier.height(8.dp))
 
