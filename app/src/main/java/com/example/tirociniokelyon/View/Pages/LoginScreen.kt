@@ -205,7 +205,7 @@ fun LoginScreen(navController: NavController) {
                     .padding(horizontal = 16.dp),
 
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF0058CC),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(16.dp),
@@ -213,8 +213,7 @@ fun LoginScreen(navController: NavController) {
             ) {
                 Text(
                     text = "Accedi",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
+                   style = MaterialTheme.typography.titleMedium,
                 )
             }
 

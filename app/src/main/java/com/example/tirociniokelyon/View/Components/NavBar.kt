@@ -54,9 +54,6 @@ data class NavItem(
 @Composable
 fun NavBar(navController: NavController) {
 
-
-
-
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
     Log.d("DEBUG", "Current Route: $currentRoute")
