@@ -58,7 +58,6 @@ fun LoginScreen(navController: NavController) {
     ) {
 
 
-
         // Contenitore principale con padding verticale
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -191,7 +190,9 @@ fun LoginScreen(navController: NavController) {
                     viewModel.signIn {
                         val user = viewModel.currentUser.value
                         if (user?.role == "PATIENT") {
-                            navController.navigate("home")
+                            navController.navigate("home") {
+                                popUpTo("login") { inclusive = true }
+                            }
                         } else {
                             viewModel.setError("Solo i pazienti possono accedere all'app.")
                         }
@@ -222,9 +223,7 @@ fun LoginScreen(navController: NavController) {
 
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
-
-                ,
+                    .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
 
             ) {
@@ -240,7 +239,7 @@ fun LoginScreen(navController: NavController) {
                 TextButton(
                     onClick = {
                         showQRScanner = true
-                              },
+                    },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = Color(0xFF0058CC)
                     )
@@ -253,7 +252,6 @@ fun LoginScreen(navController: NavController) {
                     )
                 }
             }
-
 
 
         }

@@ -175,6 +175,20 @@ fun MiniReservationCard(
                                 color = Color.Gray
                             )
 
+//                        Box(
+//                            modifier = Modifier
+//                                .size(12.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Icon(imageVector = Icons.Outlined.LocationOn, contentDescription = "clock")
+//
+//                        }
+//                        Text(
+//                            text = reservation.status,
+//                            style = MaterialTheme.typography.bodySmall,
+//                            color = Color.Gray
+//                        )
+
 
                     }
                      }

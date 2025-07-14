@@ -13,24 +13,28 @@ import java.util.Date
 interface APIreservation {
 
     @GET("reservations/next-reservation")
-    suspend fun getNextReservation(): Response<Reservation>
+    suspend fun getNextReservations(): Response<List<Reservation>>
 
     @GET("reservations/patient")
     suspend fun getReservations(
-        @Query("status") status : String = "CONFIRMED"
+        @Query("status") status: String?
     ): Response<List<Reservation>>
 
-    @GET("reservations/slots")
-    suspend fun getSlots (
-        @Query("date") date : String,
-        @Query("visitType") visitType : String
+    @GET("reservations/isFirstVisit")
+    suspend fun isFirstVisit(
+    ): Response<Boolean>
 
-    ) : Response<List<Slot>>
+    @GET("reservations/slots")
+    suspend fun getSlots(
+        @Query("date") date: String,
+        @Query("visitType") visitType: String
+
+    ): Response<List<Slot>>
 
 
     @POST("reservations")
-    suspend fun createReservation (
+    suspend fun createReservation(
         @Body() createReservationDTO: CreateReservationDTO
-    ) : Response<Reservation>
+    ): Response<Reservation>
 
 }

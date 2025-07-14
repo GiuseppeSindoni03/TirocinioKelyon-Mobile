@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Doctor
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Reservation
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.User
+import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.Repository.DoctorRepository
 import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.Repository.ReservationRepository
 import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.Repository.UserRepository
 import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.UserSessionManager
@@ -21,11 +22,11 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val sessionManager: UserSessionManager,
     private val repository: UserRepository,
-    private val reservationRepository: ReservationRepository
+    private val reservationRepository: ReservationRepository,
+    private val doctorRepository: DoctorRepository
 ) : ViewModel() {
 
     val currentUser: StateFlow<User?> = sessionManager.user
-
 
 
     data class UiState(
@@ -40,12 +41,11 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<UiState> = _uiState
 
 
-
     init {
         loadDoctor()
         loadReservation()
     }
-    
+
     fun getMe(): User? {
         return currentUser.value
     }
@@ -54,21 +54,26 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             try {
-                val result = reservationRepository.getNextReservation()
+                val result = reservationRepository.getNextReservations()
                 result.fold(
-                    onSuccess = { reservation ->
+                    onSuccess = { reservations ->
                         _uiState.update {
                             it.copy(
-                                reservation = reservation,
+                                reservation = reservations?.get(0),
                                 isLoading = false,
                                 error = null
                             )
                         }
                     },
                     onFailure = { exception ->
-                        Log.e("HomeViewModel", "Errore nel caricamento del dottore", exception)
+                        Log.e(
+                            "HomeViewModel",
+                            "Errore nel caricamento della next reservaton",
+                            exception
+                        )
                         _uiState.update {
                             it.copy(
+                                reservation = null,
                                 isLoading = false,
                                 error = exception.message ?: "Errore sconosciuto"
                             )
@@ -80,7 +85,11 @@ class HomeViewModel @Inject constructor(
                 Log.d("DEBUG", "${e.message}")
                 kotlinx.coroutines.withContext(Dispatchers.Main) {
                     _uiState.update {
-                        it.copy(error = "${e.message}")
+
+                        it.copy(
+                            isLoading = false, reservation = null,
+                            error = "${e.message}"
+                        )
                     }
                 }
             }
@@ -89,12 +98,21 @@ class HomeViewModel @Inject constructor(
 
     private fun loadDoctor() {
         _uiState.update { it.copy(isLoading = true, error = null) }
+
+        if (sessionManager.user.value == null) {
+            _uiState.update { it.copy(error = "Utente non autenticato") }
+            return
+        }
         viewModelScope.launch {
             try {
-                val result = repository.getDoctor()
+
+
+                val result = doctorRepository.getDoctor()
 
                 result.fold(
-                    onSuccess = { doctor ->
+                    onSuccess = {
+
+                            doctor ->
                         _uiState.update {
                             it.copy(
                                 doctor = doctor,

@@ -21,7 +21,7 @@ import androidx.navigation.NavController
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.ErrorComponent
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.LoadingComponent
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.NavBar
-import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.NextReservation
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.NextReservations
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.ReservationsList
 import com.example.tirociniokelyon.com.example.tirociniokelyon.ViewModel.ReservationStatus
 import com.example.tirociniokelyon.com.example.tirociniokelyon.ViewModel.ReservationViewModel
@@ -80,8 +80,8 @@ fun ReservationScreen (navController: NavController) {
 
 
                 else -> {
-                    if( uiState.nextReservation != null && uiState.doctor != null) {
-                        NextReservation(reservation = uiState.nextReservation!!, doctor = uiState.doctor!!)
+                    if( uiState.nextReservations != null && uiState.doctor != null) {
+                        NextReservations(reservations = uiState.nextReservations!!, doctor = uiState.doctor!!)
 
                     }
 

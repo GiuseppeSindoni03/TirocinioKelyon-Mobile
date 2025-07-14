@@ -129,6 +129,7 @@ fun MyApp(userSessionManager: UserSessionManager, forceLogin: Boolean = false) {
 
             ) {
                 composable("medical-detection/list") {
+
                     HomeScreen(navController = navController)
 
                 }

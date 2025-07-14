@@ -49,7 +49,8 @@ fun DoctorInfoCard(doctor: Doctor) {
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                containerColor = Color.White
+//            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         )
     ) {
         Column(
@@ -124,7 +125,7 @@ fun DoctorInfoCard(doctor: Doctor) {
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
+                        containerColor = MaterialTheme.colorScheme.primary
 
                     ),
                     shape = RoundedCornerShape(12.dp)

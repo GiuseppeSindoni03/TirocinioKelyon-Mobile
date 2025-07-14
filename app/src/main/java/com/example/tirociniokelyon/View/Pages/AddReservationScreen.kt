@@ -31,6 +31,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -45,6 +46,7 @@ import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.E
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.ErrorComponent
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.LoadingComponent
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.NavBar
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.ReservationSuccessDialog
 import com.example.tirociniokelyon.com.example.tirociniokelyon.ViewModel.ReservationStatus
 import com.example.tirociniokelyon.com.example.tirociniokelyon.ViewModel.ReservationViewModel
 import com.example.tirociniokelyon.com.example.tirociniokelyon.ViewModel.ReservationVisitType
@@ -64,7 +66,21 @@ fun AddReservationScreen(navController: NavController) {
 
     val viewModel: ReservationViewModel = hiltViewModel()
 
-    val uiState by viewModel.addState.collectAsState()
+
+    val visitType by viewModel.visitType.collectAsState()
+    val selectedDay by viewModel.selectedDay.collectAsState()
+    val selectedSlot by viewModel.selectedSlot.collectAsState()
+    val slots by viewModel.slotsState.collectAsState()
+    val isLoadingSlots by viewModel.isLoadingSlots.collectAsState()
+    val slotsError by viewModel.slotsError.collectAsState()
+
+    val isFirstVisit by viewModel.isFirstVisit.collectAsState()
+
+    val isDialogOpen by viewModel.isDialogOpen.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.isFirstVisit()
+    }
 
 
     Scaffold(
@@ -89,15 +105,22 @@ fun AddReservationScreen(navController: NavController) {
         bottomBar = {
             Column {
                 Button(
-                    onClick = { viewModel.createReservation() },
-                    enabled = uiState.selectedDay != null && uiState.selectedSlot != null,
+                    onClick = {
+                        viewModel.createReservation()
+                        Log.d("RESERVATIONS", "Invio conferma, tipo di visita $visitType")
+                    },
+
+                    shape = RoundedCornerShape(12.dp),
+
+                    enabled = selectedDay != null && selectedSlot != null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = "Conferma",
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White
                     )
                 }
 
@@ -107,67 +130,93 @@ fun AddReservationScreen(navController: NavController) {
 
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
-            when {
-                uiState.isLoading -> {
-                    LoadingComponent()
-                }
 
-                uiState.error != null -> {
-                    ErrorComponent(error = uiState.error.toString())
-                }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
 
-                else -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                ) {
 
-                        ) {
+                SelectedVisitType(
+                    onVisitTypeChange = { reservationVisitType ->
+                        viewModel.changeVisitType(reservationVisitType)
+                    },
+                    isFirstVisit = isFirstVisit,
+                    currentVisitType = visitType
+                )
 
-                        SelectedVisitType(
-                            onVisitTypeChange = { reservationVisitType ->
-                                viewModel.changeVisitType(reservationVisitType)
-                            },
-                            currentVisitType = uiState.visitType
-                        )
+                Spacer(modifier = Modifier.height(16.dp))
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Seleziona giorno",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.Black,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
 
-                        Text(
-                            text = "Seleziona giorno",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Color.Black,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
+                DaySelector(
+                    selectedDate = selectedDay,
+                    onDateSelected = { selectedDay ->
+                        viewModel.changeSelectedDay(selectedDay)
+                    })
 
-                        DaySelector(
-                            selectedDate = uiState.selectedDay,
-                            onDateSelected = { selectedDay ->
-                                viewModel.changeSelectedDay(selectedDay)
-                            })
+                Spacer(modifier = Modifier.height(40.dp))
 
-                        Spacer(modifier = Modifier.height(40.dp))
+                SlotsSection(
+                    slots = slots,
+                    selectedSlot = selectedSlot,
+                    isLoading = isLoadingSlots,
+                    error = slotsError,
+                    onSelectedSlot = { slot -> viewModel.changeSelectedSlot(slot) }
+                )
 
-                        if (uiState.slots != null) {
-                            SlotsList(
-                                slots = uiState.slots!!,
-                                onSelectedSlot = { slot -> viewModel.changeSelectedSlot(slot) },
-                                selectedSlot = uiState.selectedSlot
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
 
-
-
-
-                    }
-                }
             }
+
+            if (isDialogOpen)
+                ReservationSuccessDialog(
+                    selectedSlot = selectedSlot,
+                    selectedDay = selectedDay,
+                    visitType = visitType,
+                    onDismiss = {
+                        navController.navigate("reservation/list") {
+                            popUpTo("reservation/add") { inclusive = true }
+                        }
+                    })
+
+        }
+    }
+}
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun SlotsSection(
+    slots: List<Slot>?,
+    selectedSlot: Slot?,
+    isLoading: Boolean,
+    error: String?,
+    onSelectedSlot: (Slot) -> Unit
+) {
+    when {
+        isLoading -> {
+            LoadingComponent()
         }
 
+        error != null -> {
+            ErrorComponent(error = error)
+        }
 
+        slots != null -> {
+            SlotsList(
+                slots = slots,
+                onSelectedSlot = onSelectedSlot,
+                selectedSlot = selectedSlot
+            )
+        }
     }
 }
 
@@ -182,7 +231,6 @@ fun formatSlotTime(startTime: Date): String {
 @Composable
 fun SlotsList(slots: List<Slot>, onSelectedSlot: (Slot) -> Unit, selectedSlot: Slot?) {
 
-    Log.d("RESERVATIONS", "Slot: $slots")
 
     if (slots.isEmpty()) {
         EmptyAnimation("Nessun orario disponibile")
@@ -193,9 +241,11 @@ fun SlotsList(slots: List<Slot>, onSelectedSlot: (Slot) -> Unit, selectedSlot: S
             columns = GridCells.Fixed(3),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(30.dp),
-            horizontalArrangement = Arrangement.spacedBy(30.dp)
+            horizontalArrangement = Arrangement.spacedBy(30.dp),
+            contentPadding = PaddingValues(bottom = 8.dp)
+
 
         ) {
             items(slots) { slot ->
@@ -248,9 +298,16 @@ fun SlotItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectedVisitType(
-    currentVisitType: ReservationVisitType = ReservationVisitType.FIRST_VISIT,
-    onVisitTypeChange: (ReservationVisitType) -> Unit
+    onVisitTypeChange: (ReservationVisitType) -> Unit,
+    isFirstVisit: Boolean?,
+    currentVisitType: ReservationVisitType
 ) {
+
+    if (isFirstVisit == null) {
+        LoadingComponent()
+        return
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -279,13 +336,16 @@ fun SelectedVisitType(
                 ReservationVisitType.CONTROL
             )
 
-            Log.d("DEBUG", "VisitType = $visitOptions")
-
-
             visitOptions.forEachIndexed { index, visitType ->
-                Log.d("DEBUG", "Rendering button: ${visitType.label()} ($visitType)")
+                val isSelected = currentVisitType == visitType
+                val isEnabled = when (visitType) {
+                    ReservationVisitType.FIRST_VISIT -> isFirstVisit
+                    ReservationVisitType.CONTROL -> !isFirstVisit
+                }
 
                 SegmentedButton(
+                    selected = isSelected,
+                    enabled = isEnabled,
                     shape = SegmentedButtonDefaults.itemShape(
                         index = index,
                         count = visitOptions.size,
@@ -293,17 +353,15 @@ fun SelectedVisitType(
                     ),
 
                     onClick = { onVisitTypeChange(visitType) },
-                    selected = currentVisitType == visitType,
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = MaterialTheme.colorScheme.primary,    // sfondo selezionato
                         activeContentColor = Color.White,           // testo selezionato
                         inactiveContainerColor = Color.White,
-//                        inactiveContainerColor = MaterialTheme.colorScheme.surfaceContainerLow, // sfondo NON selezionato
                         inactiveContentColor = Color.Black          // testo NON selezionato
                     )
                 ) {
                     Text(
-                        text = visitType.label().toUpperCase(),
+                        text = visitType.nameLabel().uppercase(Locale.ROOT),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold
                     )

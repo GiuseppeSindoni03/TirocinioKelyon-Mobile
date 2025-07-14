@@ -9,8 +9,10 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -50,7 +53,6 @@ import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.S
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.SetSystemBarStyle
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.ShortCuts
 import com.example.tirociniokelyon.com.example.tirociniokelyon.ViewModel.HomeViewModel
-
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -135,31 +137,36 @@ fun HomeScreen(
                 else -> {
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
+                            .fillMaxSize()
+                            .padding(8.dp),
+
+                        ) {
+
 
                         DoctorInfoCard(doctor = uiState.doctor!!)
-
                         Spacer(modifier = Modifier.height(8.dp))
 
                         ShortCuts(
-                            onBookVisitClick = {navController.navigate("reservation/add")}
+                            onBookVisitClick = { navController.navigate("reservation/add") }
                         )
 
+
                         Spacer(modifier = Modifier.height(8.dp))
+
 
                         val activities = listOf(
                             ActivityItemFactory.createBloodPressureActivity(),
                             ActivityItemFactory.createWeightActivity(),
                             ActivityItemFactory.createHeartRateActivity(),
 
+                            )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        RecentActivitiesSection(
+                            reservation = uiState.reservation,
+                            activities = activities
                         )
 
-                       RecentActivitiesSection(
-                           reservation = uiState.reservation,
-                           activities = activities
-                       )
 
                     }
 

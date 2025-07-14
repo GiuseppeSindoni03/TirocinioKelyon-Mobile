@@ -5,33 +5,37 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
+
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Doctor
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Reservation
 import java.text.SimpleDateFormat
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NextReservation (reservation: Reservation, doctor: Doctor) {
+fun NextReservations (reservations: List<Reservation>, doctor: Doctor) {
+
+
+
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -40,14 +44,27 @@ fun NextReservation (reservation: Reservation, doctor: Doctor) {
         verticalArrangement = Arrangement.Top
     ) {
         Text(
-            text = "Prossimo appuntamento",
+            text = if(reservations.size > 1 ) "Prossimi appuntamenti" else "Prossimi appuntamento",
             modifier = Modifier
                 .padding(top = 8.dp),
             style = MaterialTheme.typography.titleLarge,
             color = Color.Black,
         )
 
-        ReservationCard(reservation = reservation, doctor = doctor)
+        LazyRow ( horizontalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp),
+
+        ) {
+
+
+            items (reservations ){ reservation ->
+                ReservationCard(reservation = reservation, doctor = doctor)
+            }
+
+
+        }
+
+
 
 
 

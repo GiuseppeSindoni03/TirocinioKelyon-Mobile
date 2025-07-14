@@ -74,7 +74,7 @@ import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.E
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.LoadingComponent
 
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
-@OptIn( ExperimentalGetImage::class)
+@OptIn(ExperimentalGetImage::class)
 @Composable
 fun InviteQRScannerBottomSheet(
     showBottomSheet: Boolean,
@@ -128,12 +128,13 @@ fun InviteQRScannerBottomSheet(
             sheetState = sheetState,
             dragHandle = null,
 
-                    windowInsets = WindowInsets(0), // Rimuove gli insets automatici
+            windowInsets = WindowInsets(0), // Rimuove gli insets automatici
             modifier = Modifier
                 .fillMaxHeight(0.95f) // Oc
         ) {
-            Box(modifier = Modifier
-                .fillMaxSize(),
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
                 contentAlignment = Alignment.Center
 
 //                .fillMaxWidth()
@@ -179,7 +180,10 @@ fun InviteQRScannerBottomSheet(
                                                                 scanned = true
                                                                 scannedInviteId = inviteId
                                                                 showSuccessSheet = true
-                                                                Log.d("DEBUG", "ID invite scan: $inviteId")
+                                                                Log.d(
+                                                                    "DEBUG",
+                                                                    "ID invite scan: $inviteId"
+                                                                )
                                                             }
                                                         }
                                                     }
@@ -222,7 +226,7 @@ fun InviteQRScannerBottomSheet(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-                    Box (
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Color.White)
@@ -252,7 +256,7 @@ fun InviteQRScannerBottomSheet(
                     }
 
 
-                    
+
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -287,7 +291,7 @@ fun InviteQRScannerBottomSheet(
                             )
                         }
 
-                        }
+                    }
 
                     Box(
                         modifier = Modifier
@@ -305,12 +309,12 @@ fun InviteQRScannerBottomSheet(
                         )
                     }
 
-                    }
-
-
                 }
+
+
             }
         }
+    }
     if (showSuccessSheet) {
         Dialog(
             onDismissRequest = {
@@ -439,7 +443,7 @@ fun InviteQRScannerBottomSheet(
                     // Stato di caricamento/errore (se necessario)
                     when {
                         uiState.isLoading -> {
-                          LoadingComponent()
+                            LoadingComponent()
                         }
 
                         uiState.error != null -> {

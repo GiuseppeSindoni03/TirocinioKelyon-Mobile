@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,11 +46,9 @@ fun RecentActivitiesSection(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(12.dp),
     verticalSpacing: Dp = 16.dp,
-    titleSpacing: Dp = 16.dp
 ) {
-    Column(
-        modifier = modifier.fillMaxSize()
-    ) {
+
+    Column (modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
             color = Color.Black,
@@ -59,11 +58,14 @@ fun RecentActivitiesSection(
             ))
         )
 
-        Spacer(modifier = Modifier.height(titleSpacing))
+        Spacer(modifier = Modifier.height(8.dp))
+
+
+
 
         // LazyColumn con contenuto scrollabile
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxWidth(),
             contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(verticalSpacing)
         ) {
@@ -75,6 +77,7 @@ fun RecentActivitiesSection(
                     )
                 }
             }
+
 
             // Lista delle attività
             items(activities) { activity ->
@@ -88,4 +91,5 @@ fun RecentActivitiesSection(
             }
         }
     }
-}
+
+    }

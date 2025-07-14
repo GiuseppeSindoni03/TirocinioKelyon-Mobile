@@ -10,6 +10,7 @@ import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Reservation
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Slot
 import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.Repository.ReservationRepository
 import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.Repository.UserRepository
+import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.UserSessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 
 
@@ -40,16 +42,25 @@ enum class ReservationVisitType {
 
     fun label(): String {
         return when (this) {
+            FIRST_VISIT -> "FIRST_VISIT"
+            CONTROL -> "CONTROL"
+        }
+    }
+
+    fun nameLabel (): String {
+        return when (this) {
             FIRST_VISIT -> "Prima visita"
             CONTROL -> "Visita di controllo"
         }
     }
+
+
 }
 
 
 
 data class UiState(
-    val nextReservation: Reservation? = null,
+    val nextReservations: List<Reservation>? = null,
     val doctor: Doctor? = null,
     val isLoading: Boolean = false,
     val error: String? = null
@@ -62,19 +73,13 @@ data class ReservationListState(
     val error: String? = null
 )
 
-data class ReservationAddState(
-    val slots: List<Slot>? = null,
-    val visitType: ReservationVisitType= ReservationVisitType.FIRST_VISIT,
-    val selectedDay : String? = null,
-    val selectedSlot: Slot? = null,
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
+
 
 
 @HiltViewModel
 
 class ReservationViewModel @Inject constructor(
+    private val sessionManager: UserSessionManager,
     private val repository: ReservationRepository,
     private val userRepository: UserRepository
 ) : ViewModel() {
@@ -85,13 +90,35 @@ class ReservationViewModel @Inject constructor(
     private val _listState = MutableStateFlow(ReservationListState())
     val listState: StateFlow<ReservationListState> = _listState
 
-    private val _addState = MutableStateFlow(ReservationAddState())
-    val addState: StateFlow<ReservationAddState> = _addState
+    private val _slotsState = MutableStateFlow<List<Slot>?>(null)
+    val slotsState: StateFlow<List<Slot>?> = _slotsState
+
+    private val _visitType = MutableStateFlow(ReservationVisitType.FIRST_VISIT )
+    val visitType: StateFlow<ReservationVisitType> = _visitType
+
+    private val _selectedDay = MutableStateFlow<String?>(null)
+    val selectedDay: StateFlow<String?> = _selectedDay
+
+    private val _selectedSlot = MutableStateFlow<Slot?>(null)
+    val selectedSlot: StateFlow<Slot?> = _selectedSlot
+
+    private val _isLoadingSlots = MutableStateFlow(false)
+    val isLoadingSlots: StateFlow<Boolean> = _isLoadingSlots
+
+    private val _slotsError = MutableStateFlow<String?>(null)
+    val slotsError: StateFlow<String?> = _slotsError
+
+    private val _isFirstVisit = MutableStateFlow<Boolean?>(null)
+    val isFirstVisit: StateFlow<Boolean?> = _isFirstVisit
+
+    private var _isDialogOpen = MutableStateFlow<Boolean>(false)
+    val isDialogOpen : StateFlow<Boolean> = _isDialogOpen
 
     init {
+        loadDoctor()
         loadNextReservation()
         loadReservations(listState.value.currentStatus)
-        loadDoctor()
+
     }
 
     fun changeReservationStatus(status: ReservationStatus) {
@@ -100,49 +127,64 @@ class ReservationViewModel @Inject constructor(
     }
 
     fun changeVisitType(visitType: ReservationVisitType) {
-        _addState.update { it.copy(visitType = visitType) }
+        _visitType.value = visitType
         // Ricarica gli slot se è già stato selezionato un giorno
-        if (_addState.value.selectedDay != null) {
+        if (_selectedDay.value != null) {
             loadSlots()
         }
     }
 
     fun changeSelectedSlot (slot: Slot) {
-        _addState.update { it.copy(selectedSlot = slot) }
+        _selectedSlot.value = slot
     }
 
     fun changeSelectedDay (day: String) {
-        _addState.update { it.copy(selectedDay = day, selectedSlot = null) }
-
+        _selectedDay.value = day
+        _selectedSlot.value = null // Reset slot selection
         loadSlots()
+
     }
 
     fun createReservation () {
-        _addState.update { it.copy(isLoading = true, error = null) }
+        val currentSelectedSlot = _selectedSlot.value
+        val currentVisitType = _visitType.value
+
+
+        if (currentSelectedSlot == null) return
+
+        _isLoadingSlots.value = true
+        _slotsError.value = null
 
         Log.d("RESERVATIONS", "Inizio createReservation viewModel")
 
         viewModelScope.launch {
             try {
+                val utcFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+                utcFormat.timeZone = TimeZone.getTimeZone("UTC")
 
                 val reservation = CreateReservationDTO(
-                    startTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).format(addState.value.selectedSlot!!.startTime),
-                    endTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).format(addState.value.selectedSlot!!.endTime),
-                    visitType = addState.value.visitType.toString(),
-
+                    startTime = utcFormat.format(currentSelectedSlot.startTime),
+                    endTime = utcFormat.format(currentSelectedSlot.endTime),
+                    visitType = currentVisitType.label()
                 )
+
 
                 Log.d("RESERVATIONS", "Invio di $reservation")
                 val result = repository.createReservation(reservation)
 
                 result.fold(
                     onSuccess = {
-                        _addState.update { it.copy( isLoading = false, error =null) }
-                    },
+                        _isLoadingSlots.value = false
+                        _slotsError.value = null
+                        _isDialogOpen.value = true
+
+                        loadReservations(ReservationStatus.PENDING)
+
+                        },
                     onFailure = {
                         exception ->
-                        _addState.update { it.copy( isLoading = false, error = exception.message) }
-
+                        _isLoadingSlots.value = false
+                        _slotsError.value = exception.message
                     }
                 )
 
@@ -154,86 +196,76 @@ class ReservationViewModel @Inject constructor(
     }
 
     private fun loadSlots () {
-        val currentState = _addState.value
+        val currentDay = _selectedDay.value
+        val currentVisitType = _visitType.value
 
-        if (currentState.selectedDay == null) {
+
+        if (currentDay == null) {
             Log.d("RESERVATIONS", "Nessun giorno selezionato")
             return
         }
 
         Log.d("RESERVATIONS", "Inizio chiamata getSlot ViewModel")
 
-        _addState.update { it.copy(isLoading = true, error = null) }
+
+        _isLoadingSlots.value = true
+        _slotsError.value = null
+
         viewModelScope.launch {
             try {
-               val result = repository.getSlots(visitType = _addState.value.visitType!!, date = _addState.value.selectedDay!!)
+               val result = repository.getSlots(visitType = currentVisitType, date = currentDay)
 
                 Log.d("RESERVATIONS", "Result viewModel: ${result}")
                 result.fold(
                     onSuccess = { slots ->
-                        _addState.update {
-                            it.copy(
-                                slots = slots,
-                                isLoading = false,
-                                error = null
-                            )
-                        }
+                        _slotsState.value = slots
+                        _isLoadingSlots.value = false
+                        _slotsError.value = null
                     },
                     onFailure = {
                             exception ->
                         Log.e("DEBUG", "Errore nel caricamento degli slot", exception)
-                        _addState.update {
-                            it.copy(
-                                isLoading = false,
-                                error = exception.message ?: "Errore sconosciuto"
-                            )
-                        }
+                        _isLoadingSlots.value = false
+                        _slotsError.value = exception.message ?: "Errore sconosciuto"
                     }
                 )
             } catch (e: Exception) {
                 Log.e("DEBUG", "Errore nel caricamento degli slot ${e.message}")
-
+                _isLoadingSlots.value = false
+                _slotsError.value = e.message ?: "Errore sconosciuto"
 
             }
         }
     }
 
-//    private fun addReservation(visitType: ReservationVisitType) {
-//
-//        Log.d("RESERVATIONS", "Inizio chiamata view Model")
-//        _listState.update { it.copy(isLoading = true, error = null) }
-//        viewModelScope.launch {
-//            try {
-//                val result = repository.getReservations(status)
-//
-//                Log.d("RESERVATIONS", "Result viewModel: ${result}")
-//                result.fold(
-//                    onSuccess = { reservations ->
-//                        _listState.update {
-//                            it.copy(
-//                                reservations = reservations,
-//                                isLoading = false,
-//                                error = null
-//                            )
-//                        }
-//                    },
-//                    onFailure = {
-//                            exception ->
-//                        Log.e("DEBUG", "Errore nel caricamento delle prenotazioni", exception)
-//                        _listState.update {
-//                            it.copy(
-//                                isLoading = false,
-//                                error = exception.message ?: "Errore sconosciuto"
-//                            )
-//                        }
-//                    }
-//                )
-//            } catch (e: Exception) {
-//                Log.e("RESERVATIONS","Errore nel caricamento delle prenotazioni: ${e.message}")
-//            }
-//        }
-//
-//    }
+     fun isFirstVisit () {
+        Log.d("RESERVATION", "Inizio chiamata isFirstVisit viewModel")
+
+        viewModelScope.launch {
+            try {
+
+                val result = repository.isFirstVisit()
+
+                result.fold(
+                        onSuccess = { isFirst ->
+                            Log.d("RESERVATION", "È first visit? $isFirst")
+                            _isFirstVisit.value = isFirst
+                            _visitType.value = if (isFirst) {
+                                ReservationVisitType.FIRST_VISIT
+                            } else {
+                                ReservationVisitType.CONTROL
+                            }
+                        },
+                onFailure = { error ->
+                    Log.e("RESERVATION", "Errore durante isFirstVisit: ${error.message}")
+                    _isFirstVisit.value = null // oppure false o gestisci come preferisci
+                }
+                )
+            } catch (e: Exception) {
+                Log.d("RESERVATIONS","Errore ${e.message}")
+            }
+        }
+    }
 
     private fun loadReservations(status: ReservationStatus) {
 
@@ -276,19 +308,19 @@ class ReservationViewModel @Inject constructor(
         _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             try {
-                val result = repository.getNextReservation()
+                val result = repository.getNextReservations()
                 result.fold(
-                    onSuccess = { reservation ->
+                    onSuccess = { reservations ->
                         _uiState.update {
                             it.copy(
-                                nextReservation = reservation,
+                                nextReservations = reservations,
                                 isLoading = false,
                                 error = null
                             )
                         }
                     },
                     onFailure = { exception ->
-                        Log.e("DEBUG", "Errore nel caricamento del dottore", exception)
+                        Log.e("DEBUG", "Errore nel caricamento della prossima prenotazione", exception)
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -312,9 +344,15 @@ class ReservationViewModel @Inject constructor(
 
     private fun loadDoctor() {
         _uiState.update { it.copy(isLoading = true, error = null) }
+        if (sessionManager.user.value == null) {
+            _uiState.update { it.copy(error = "Utente non autenticato") }
+            return
+        }
         viewModelScope.launch {
             try {
                 val result = userRepository.getDoctor()
+
+
 
                 result.fold(
                     onSuccess = { doctor ->

@@ -62,6 +62,7 @@ object NetworkModule {
         return retrofit.create(APIinvite::class.java)
     }
 
+
     @Provides
     @Singleton
     fun provideAPIpatient(retrofit: Retrofit): APIpatient {

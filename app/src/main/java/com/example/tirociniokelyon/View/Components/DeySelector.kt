@@ -48,9 +48,6 @@ fun DaySelector(
         }
     }
 
-    Log.d("RESERVATIONS", "Sono dentro il Day selector $days")
-
-
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp),
