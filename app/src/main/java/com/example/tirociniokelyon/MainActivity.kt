@@ -1,10 +1,15 @@
 package com.example.tirociniokelyon
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +22,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 
 import androidx.navigation.compose.NavHost
@@ -28,13 +32,17 @@ import androidx.navigation.navigation
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.LoadingComponent
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.AddReservationScreen
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.HomeScreen
-import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.InviteQRScannerBottomSheet
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.LoginScreen
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.MedicalDetectionScreen
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.RegisterScreen
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.ReservationScreen
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.SpO2Screen
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.UserProfile
+import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.BluetoothManagerSingleton
+import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.PermissionUtils
 import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.UserSessionManager
 import com.example.tirociniokelyon.ui.theme.TirocinioKelyonTheme
+import com.example.tirociniokelyon.utils.BleConnector
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -45,9 +53,18 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userSessionManager: UserSessionManager
 
+
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+
+        BluetoothManagerSingleton.getInstance().initialize(this)
+
+
+
         setContent {
             TirocinioKelyonTheme(dynamicColor = false) {
 
@@ -56,16 +73,19 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MyApp(userSessionManager, forceLogin = false)
+                    MyApp(userSessionManager, forceLogin = false, activity = this)
                 }
             }
         }
     }
+
+
 }
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MyApp(userSessionManager: UserSessionManager, forceLogin: Boolean = false) {
+fun MyApp(userSessionManager: UserSessionManager, forceLogin: Boolean = false, activity: ComponentActivity) {
     val navController = rememberNavController()
 
 
@@ -123,24 +143,11 @@ fun MyApp(userSessionManager: UserSessionManager, forceLogin: Boolean = false) {
             }
 
 
+
+
+
             navigation(
-                startDestination =" medical-detection/list",
-                route = "medical-detection"
-
-            ) {
-                composable("medical-detection/list") {
-
-                    HomeScreen(navController = navController)
-
-                }
-
-
-
-            }
-
-
-            navigation(startDestination ="reservation/list"
-,                route = "reservation"
+                startDestination = "reservation/list", route = "reservation"
 
             ) {
                 composable("reservation/list") {
@@ -148,12 +155,25 @@ fun MyApp(userSessionManager: UserSessionManager, forceLogin: Boolean = false) {
 
                 }
 
-                composable("reservation/add" ) {
+                composable("reservation/add") {
                     AddReservationScreen(navController = navController)
                 }
             }
 
 
+
+            navigation(
+                startDestination = "medical-detection/list",
+                route = "medical-detection"
+            ) {
+                composable("medical-detection/list") {
+                    MedicalDetectionScreen(navController)
+                }
+
+                composable("medical-detection/spo2-test") {
+                    SpO2Screen(activity = activity, navController = navController)
+                }
+            }
 
 
         }

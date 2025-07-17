@@ -163,7 +163,6 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         RecentActivitiesSection(
-                            reservation = uiState.reservation,
                             activities = activities
                         )
 

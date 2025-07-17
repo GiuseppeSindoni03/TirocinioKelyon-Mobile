@@ -12,18 +12,26 @@ import java.util.Date
 
 interface APIreservation {
 
+
+    //ti restituisce le prenotazioni future confermate, ReservationScreen
     @GET("reservations/next-reservation")
     suspend fun getNextReservations(): Response<List<Reservation>>
 
+
+    // restituissce tutte le prenotazioni esistenti per uno specifico stato, ReservationScreen
     @GET("reservations/patient")
     suspend fun getReservations(
         @Query("status") status: String?
     ): Response<List<Reservation>>
 
+
+    // restituisce vero se non esistono visite, AddReservationScreen
     @GET("reservations/isFirstVisit")
     suspend fun isFirstVisit(
     ): Response<Boolean>
 
+
+    // restituisce gli slot per uno specifico giorno, AddReservationScreen
     @GET("reservations/slots")
     suspend fun getSlots(
         @Query("date") date: String,
@@ -32,6 +40,7 @@ interface APIreservation {
     ): Response<List<Slot>>
 
 
+    // Aggiunge una prenotazione, Add ReservationScreen
     @POST("reservations")
     suspend fun createReservation(
         @Body() createReservationDTO: CreateReservationDTO

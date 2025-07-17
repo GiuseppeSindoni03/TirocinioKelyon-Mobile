@@ -69,7 +69,7 @@ class ReservationRepository @Inject constructor(
             } else if (response.code() == 404) {
                 Result.success(null)
             } else {
-                Result.failure(Exception("Errore HTTP: ${response.code()}"))
+                Result.failure(Exception("Errore HTTP: ${response.raw()}"))
             }
         } catch (e: Exception) {
             Log.d("DEBUG", "Errore: $e")

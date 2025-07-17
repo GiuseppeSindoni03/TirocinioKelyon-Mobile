@@ -77,12 +77,14 @@ dependencies {
     // Hilt dependencies
     implementation("com.google.dagger:hilt-android:2.48")
     implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1")
+    implementation("com.google.android.material:material:1.12.0")
     ksp("com.google.dagger:hilt-android-compiler:2.48")
 
     // Hilt Navigation Compose (se usi la navigazione)
 
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
+    implementation(files("libs/BleDev_v2.5.1.aar"))
 
     implementation ("com.squareup.okhttp3:logging-interceptor:4.11.0")
 

@@ -41,7 +41,6 @@ data class ActivityItem(
 @Composable
 fun RecentActivitiesSection(
     title: String = "Attività recenti",
-    reservation: Reservation? = null,
     activities: List<ActivityItem> = emptyList(),
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(12.dp),
@@ -69,14 +68,7 @@ fun RecentActivitiesSection(
             contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(verticalSpacing)
         ) {
-            // Card della prenotazione (se presente)
-            if (reservation != null) {
-                item {
-                    NextReservationCardHome(
-                        reservation = reservation,
-                    )
-                }
-            }
+
 
 
             // Lista delle attività

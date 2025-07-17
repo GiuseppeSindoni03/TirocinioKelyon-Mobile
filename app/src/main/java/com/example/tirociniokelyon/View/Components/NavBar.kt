@@ -29,17 +29,14 @@ import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.PermissionUtils
 
 
 data class NavItem(
@@ -53,6 +50,7 @@ data class NavItem(
 
 @Composable
 fun NavBar(navController: NavController) {
+    val context = LocalContext.current
 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
@@ -112,7 +110,14 @@ fun NavBar(navController: NavController) {
                 onClick = {
                     when (currentRoute) {
                         "reservation/list" -> navController.navigate("reservation/add")
-                        "medical-detection/list" -> navController.navigate("medical-detection/add")
+                        "medical-detection/list" ->
+
+                            if (PermissionUtils.hasBluetoothPermissions(context)) {
+                                navController.navigate("medical-detection/spo2-test")
+                            }
+
+
+
                     }
                 },
 

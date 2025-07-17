@@ -22,7 +22,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val sessionManager: UserSessionManager,
     private val repository: UserRepository,
-    private val reservationRepository: ReservationRepository,
+//    private val reservationRepository: ReservationRepository,
     private val doctorRepository: DoctorRepository
 ) : ViewModel() {
 
@@ -43,58 +43,58 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadDoctor()
-        loadReservation()
+//        loadReservation()
     }
 
     fun getMe(): User? {
         return currentUser.value
     }
 
-    private fun loadReservation() {
-        _uiState.update { it.copy(isLoading = true, error = null) }
-        viewModelScope.launch {
-            try {
-                val result = reservationRepository.getNextReservations()
-                result.fold(
-                    onSuccess = { reservations ->
-                        _uiState.update {
-                            it.copy(
-                                reservation = reservations?.get(0),
-                                isLoading = false,
-                                error = null
-                            )
-                        }
-                    },
-                    onFailure = { exception ->
-                        Log.e(
-                            "HomeViewModel",
-                            "Errore nel caricamento della next reservaton",
-                            exception
-                        )
-                        _uiState.update {
-                            it.copy(
-                                reservation = null,
-                                isLoading = false,
-                                error = exception.message ?: "Errore sconosciuto"
-                            )
-                        }
-                    }
-                )
-
-            } catch (e: Exception) {
-                Log.d("DEBUG", "${e.message}")
-                kotlinx.coroutines.withContext(Dispatchers.Main) {
-                    _uiState.update {
-
-                        it.copy(
-                            isLoading = false, reservation = null,
-                            error = "${e.message}"
-                        )
-                    }
-                }
-            }
-        }
-    }
+//    private fun loadReservation() {
+//        _uiState.update { it.copy(isLoading = true, error = null) }
+//        viewModelScope.launch {
+//            try {
+//                val result = reservationRepository.getNextReservations()
+//                result.fold(
+//                    onSuccess = { reservations ->
+//                        _uiState.update {
+//                            it.copy(
+//                                reservation = reservations?.get(0),
+//                                isLoading = false,
+//                                error = null
+//                            )
+//                        }
+//                    },
+//                    onFailure = { exception ->
+//                        Log.e(
+//                            "HomeViewModel",
+//                            "Errore nel caricamento della next reservaton",
+//                            exception
+//                        )
+//                        _uiState.update {
+//                            it.copy(
+//                                reservation = null,
+//                                isLoading = false,
+//                                error = exception.message ?: "Errore sconosciuto"
+//                            )
+//                        }
+//                    }
+//                )
+//
+//            } catch (e: Exception) {
+//                Log.d("DEBUG", "${e.message}")
+//                kotlinx.coroutines.withContext(Dispatchers.Main) {
+//                    _uiState.update {
+//
+//                        it.copy(
+//                            isLoading = false, reservation = null,
+//                            error = "${e.message}"
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     private fun loadDoctor() {
         _uiState.update { it.copy(isLoading = true, error = null) }

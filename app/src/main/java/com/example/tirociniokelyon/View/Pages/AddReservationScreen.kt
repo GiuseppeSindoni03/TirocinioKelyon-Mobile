@@ -114,7 +114,6 @@ fun AddReservationScreen(navController: NavController) {
 
                     enabled = selectedDay != null && selectedSlot != null,
                     modifier = Modifier
-                        ..()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Text(
