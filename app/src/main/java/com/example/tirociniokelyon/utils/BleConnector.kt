@@ -27,6 +27,8 @@ class BleConnector(private val context: Context) {
     var onConnectionChanged: ((Boolean) -> Unit)? = null
     var onSpO2DataReceived: ((spo2: Int, heartRate: Int) -> Unit)? = null
     var onDeviceListUpdated: ((List<OnBLEService.DeviceSort>) -> Unit)? = null
+    var onMeasurementCompleted: ((Boolean) -> Unit)? = null
+
 
     init {
         Log.d("BleConnector", "🔧 Inizializzazione BleConnector...")
@@ -90,6 +92,11 @@ class BleConnector(private val context: Context) {
             override fun onSpO2Result(spo2: Int, pr: Int) {
                 Log.d("BleConnector", "📊 SpO2: $spo2%, HR: $pr bpm")
                 onSpO2DataReceived?.invoke(spo2, pr)
+
+                val isValidMeasurement = spo2 > 0 && spo2 <= 100 && pr > 0 && pr <= 250
+                if (isValidMeasurement) {
+                    onMeasurementCompleted?.invoke(true)
+                }
             }
 
             override fun onSpO2Wave(p0: Int) {} // Ignorato per semplicità

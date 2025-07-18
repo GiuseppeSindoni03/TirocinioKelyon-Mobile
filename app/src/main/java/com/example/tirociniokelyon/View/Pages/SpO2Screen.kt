@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bloodtype
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Save
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,6 +28,7 @@ import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.C
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.DeviceSelectionModal
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.EmptyAnimation
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.MedicalDetection
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.MedicalDetectionCompleted
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.NavBar
 import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.PermissionUtils
 import com.example.tirociniokelyon.utils.BluetoothManagerSingleton
@@ -54,6 +56,7 @@ fun SpO2Screen(
     val isConnected by viewModel.isConnected.collectAsState()
     val isMeasuring by viewModel.isMeasuring.collectAsState()
     val deviceList by viewModel.deviceList.collectAsState()
+    val measurementCompleted by viewModel.measurementCompleted.collectAsState()
 
     val connectedDevice by viewModel.connectedDevice.collectAsState() // Aggiungi questo nel ViewModel
 
@@ -225,12 +228,19 @@ fun SpO2Screen(
                     ) {
                         if (isMeasuring) {
                             MedicalDetection(spO2Value = spO2Value, heartRate = heartRate)
-
-
                         }
+                        else if (measurementCompleted && spO2Value > 0 && heartRate > 0) {
+                                // Mostra i risultati della misurazione con il pulsante Salva
+                                MedicalDetectionCompleted(spO2Value = spO2Value, heartRate = heartRate, onSaveDetection = { viewModel.saveMeasurement() })
 
-                        else
-                        Text(text = "Nessuna rilevazione al momento...")
+
+                            } else {
+                                Text(
+                                    text = "Nessuna rilevazione al momento...",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
 
                     }
 

@@ -45,35 +45,14 @@ class SpO2ViewModel(application: Application) : AndroidViewModel(application) {
     private val _connectedDevice = MutableStateFlow<OnBLEService.DeviceSort?>(null)
     val connectedDevice: StateFlow<OnBLEService.DeviceSort?> = _connectedDevice.asStateFlow()
 
+    private val _measurementCompleted = MutableStateFlow(false)
+    val measurementCompleted: StateFlow<Boolean> = _measurementCompleted.asStateFlow()
 
     init {
         Log.d("SpO2ViewModel", "🔧 ViewModel inizializzato")
 
         setupBleConnectorCallbacks()
 
-        // Callback per ricevere aggiornamenti da BleConnector
-//        bleConnector.onConnectionChanged = { connected ->
-//            viewModelScope.launch {
-//                _isConnected.value = connected
-//                if (!connected) _isMeasuring.value = false
-//                Log.d("SpO2ViewModel", "🔌 Stato connessione: $connected")
-//            }
-//        }
-//
-//        bleConnector.onDeviceListUpdated = { devices ->
-//            viewModelScope.launch {
-//                _deviceList.value = devices
-//                Log.d("SpO2ViewModel", "📡 Trovati ${devices.size} dispositivi")
-//            }
-//        }
-//
-//        bleConnector.onSpO2DataReceived = { spo2, hr ->
-//            viewModelScope.launch {
-//                _spO2.value = spo2
-//                _heartRate.value = hr
-//                Log.d("SpO2ViewModel", "📊 SpO₂: $spo2%, HR: $hr bpm")
-//            }
-//        }
     }
 
     private fun setupBleConnectorCallbacks() {
@@ -103,6 +82,14 @@ class SpO2ViewModel(application: Application) : AndroidViewModel(application) {
                     Log.d("SpO2ViewModel", "📊 SpO₂: $spo2%, HR: $hr bpm")
                 }
             }
+
+            bleConnector.onMeasurementCompleted = { completed ->
+                viewModelScope.launch {
+                    _measurementCompleted.value = completed
+                    Log.d("SpO2ViewModel", "✅ Misurazione completata: $completed")
+                }
+            }
+
         } catch (e: Exception) {
             Log.e("SpO2ViewModel", "Errore nell'inizializzazione dei callback", e)
             _errorMessage.value = "Errore nell'inizializzazione: ${e.message}"
@@ -185,6 +172,33 @@ class SpO2ViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 Log.e("SpO2ViewModel", "Errore durante la disconnessione", e)
                 _errorMessage.value = "Errore di disconnessione: ${e.message}"
+            }
+        }
+    }
+
+    fun saveMeasurement() {
+        viewModelScope.launch {
+            try {
+                Log.d("SpO2ViewModel", "💾 Salvataggio misurazione: SpO₂=${_spO2.value}%, HR=${_heartRate.value}bpm")
+
+                // Qui implementerai le chiamate API per salvare la misurazione
+                // Esempio:
+                // apiService.saveMeasurement(
+                //     spO2 = _spO2.value,
+                //     heartRate = _heartRate.value,
+                //     timestamp = System.currentTimeMillis()
+                // )
+
+                // Per ora, reset dello stato dopo il salvataggio
+                _measurementCompleted.value = false
+                _spO2.value = 0
+                _heartRate.value = 0
+
+                Log.d("SpO2ViewModel", "✅ Misurazione salvata con successo")
+
+            } catch (e: Exception) {
+                Log.e("SpO2ViewModel", "Errore durante il salvataggio della misurazione", e)
+                _errorMessage.value = "Errore salvataggio: ${e.message}"
             }
         }
     }
