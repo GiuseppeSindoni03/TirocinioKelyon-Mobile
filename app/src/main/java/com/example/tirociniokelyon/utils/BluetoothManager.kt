@@ -1,5 +1,4 @@
-package com.example.tirociniokelyon.com.example.tirociniokelyon.utils
-
+package com.example.tirociniokelyon.utils
 
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
@@ -11,10 +10,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import com.example.tirociniokelyon.utils.BleConnector
+import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.PermissionUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -31,253 +27,134 @@ class BluetoothManagerSingleton private constructor() {
         }
     }
 
-    private var bleConnector: BleConnector? = null
-    private var bluetoothAdapter: BluetoothAdapter? = null
     private var context: Context? = null
-
-    // Stati osservabili
-    private val _isInitialized = MutableStateFlow(false)
-    val isInitialized: StateFlow<Boolean> = _isInitialized
-
-    private val _isBluetoothEnabled = MutableStateFlow(false)
-    val isBluetoothEnabled: StateFlow<Boolean> = _isBluetoothEnabled
+    private var bluetoothAdapter: BluetoothAdapter? = null
 
     private val _hasPermissions = MutableStateFlow(false)
     val hasPermissions: StateFlow<Boolean> = _hasPermissions
 
-    private val _initializationStatus = MutableStateFlow<String>("Non inizializzato")
+    private val _isBluetoothEnabled = MutableStateFlow(false)
+    val isBluetoothEnabled: StateFlow<Boolean> = _isBluetoothEnabled
+
+    private val _initializationStatus = MutableStateFlow("Non inizializzato")
     val initializationStatus: StateFlow<String> = _initializationStatus
 
-    // Launchers per permessi e bluetooth
-    private var permissionLauncher: ActivityResultLauncher<Array<String>>? = null
-    private var bluetoothEnableLauncher: ActivityResultLauncher<Intent>? = null
+    private val _isReady = MutableStateFlow(false)
+    val isReady: StateFlow<Boolean> = _isReady
 
-    /**
-     * Inizializza il BluetoothManager con il contesto dell'activity
-     */
+    private var currentActivity: ComponentActivity? = null
+
     fun initialize(activity: ComponentActivity) {
-        Log.d("BluetoothManager", "🚀 Inizializzazione BluetoothManager")
+        try {
+            context = activity.applicationContext // Usa applicationContext per evitare memory leak
+            currentActivity = activity
 
-        this.context = activity
+            val btManager = activity.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+                ?: throw IllegalStateException("BluetoothManager non disponibile")
 
-        // Configura i launchers
-        setupLaunchers(activity)
+            bluetoothAdapter = btManager.adapter ?: throw IllegalStateException("Bluetooth non supportato")
 
-        // Inizializza l'adapter Bluetooth
-        val bluetoothManager =
-            activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        bluetoothAdapter = bluetoothManager.adapter
-
-        if (bluetoothAdapter == null) {
-            Log.e("BluetoothManager", "❌ Bluetooth non supportato")
-            _initializationStatus.value = "Bluetooth non supportato"
-            Toast.makeText(activity, "Bluetooth non supportato", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        _initializationStatus.value = "Verifica permessi..."
-
-        // Verifica permessi
-        checkPermissions()
-    }
-
-    private fun setupLaunchers(activity: ComponentActivity) {
-        // Launcher per i permessi
-        permissionLauncher = activity.registerForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ) { permissions ->
-            val allGranted = permissions.all { it.value }
-            _hasPermissions.value = allGranted
-
-            if (allGranted) {
-                Log.d("BluetoothManager", "✅ Tutti i permessi concessi")
-                _initializationStatus.value = "Permessi ottenuti"
-                checkBluetoothEnabled()
-            } else {
-                Log.e("BluetoothManager", "❌ Permessi negati: ${permissions.filter { !it.value }}")
-                _initializationStatus.value = "Permessi negati"
-                Toast.makeText(activity, "Permessi Bluetooth necessari", Toast.LENGTH_LONG).show()
-            }
-        }
-
-        // Launcher per abilitare il Bluetooth
-        bluetoothEnableLauncher = activity.registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                Log.d("BluetoothManager", "✅ Bluetooth abilitato")
-                _isBluetoothEnabled.value = true
-                _initializationStatus.value = "Bluetooth abilitato"
-                initializeBleConnector()
-            } else {
-                Log.e("BluetoothManager", "❌ Bluetooth non abilitato")
-                _initializationStatus.value = "Bluetooth non abilitato"
-                Toast.makeText(context, "Bluetooth necessario", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
-    private fun checkPermissions() {
-        context?.let { ctx ->
-            if (PermissionUtils.hasAllBlePermissions(ctx)) {
-                Log.d("BluetoothManager", "✅ Permessi già concessi")
-                _hasPermissions.value = true
-                checkBluetoothEnabled()
-            } else {
-                Log.d("BluetoothManager", "🔐 Richiesta permessi")
-                _initializationStatus.value = "Richiesta permessi..."
-                val missingPermissions = PermissionUtils.getMissingBluetoothPermissions(ctx) +
-                        PermissionUtils.getMissingLocationPermissions(ctx)
-
-                permissionLauncher?.launch(missingPermissions.distinct().toTypedArray())
-            }
-        }
-    }
-
-    private fun checkBluetoothEnabled() {
-        if (bluetoothAdapter?.isEnabled == false) {
-            Log.d("BluetoothManager", "🔄 Richiesta abilitazione Bluetooth")
-            _initializationStatus.value = "Richiesta abilitazione Bluetooth..."
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            bluetoothEnableLauncher?.launch(enableBtIntent)
-        } else {
-            Log.d("BluetoothManager", "✅ Bluetooth già abilitato")
-            _isBluetoothEnabled.value = true
-            initializeBleConnector()
-        }
-    }
-
-    private fun initializeBleConnector() {
-        context?.let { ctx ->
-            Log.d("BluetoothManager", "🔗 Inizializzazione BleConnector")
-            _initializationStatus.value = "Inizializzazione BLE..."
-
-            bleConnector = BleConnector(ctx).apply {
-                onServiceReady = {
-                    Log.d("BluetoothManager", "✅ BLE Service pronto")
-                    _isInitialized.value = true
-                    _initializationStatus.value = "BLE pronto"
-                }
-
-                onConnectionStateChanged = { connected ->
-                    Log.d("BluetoothManager", "🔗 Stato connessione: $connected")
-                    // Questi log aiuteranno a tracciare la connessione
-                }
-
-                onDeviceListUpdated = { devices ->
-                    Log.d("BluetoothManager", "📱 Dispositivi trovati: ${devices.size}")
-                    devices.forEachIndexed { index, device ->
-                        Log.d("BluetoothManager", "  $index: ${getDeviceName(device)}")
-                    }
-                }
-            }
-        }
-    }
-
-    private fun getDeviceName(device: com.linktop.whealthService.OnBLEService.DeviceSort): String {
-        return try {
-            context?.let { ctx ->
-                if (PermissionUtils.hasPermission(
-                        ctx,
-                        android.Manifest.permission.BLUETOOTH_CONNECT
-                    )
-                ) {
-//                    device.bleDevice.name ?:
-                    "Nome sconosciuto"
-                } else {
-                    "Permesso mancante"
-                }
-            } ?: "Contesto non disponibile"
+            checkInitialState()
         } catch (e: Exception) {
-            "Errore: ${e.message}"
+            Log.e("BluetoothManager", "Errore inizializzazione", e)
+            _initializationStatus.value = "Errore: ${e.localizedMessage}"
+            Toast.makeText(activity, "Errore Bluetooth: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
         }
     }
 
-    /**
-     * Ottiene il BleConnector (solo se inizializzato)
-     */
-    fun getBleConnector(): BleConnector? {
-        if (!_isInitialized.value) {
-            Log.w("BluetoothManager", "⚠️ BleConnector non ancora inizializzato")
-            return null
-        }
-        return bleConnector
-    }
+    private fun checkInitialState() {
+        context?.let { ctx ->
+            val hasAll = PermissionUtils.hasAllBlePermissions(ctx)
+            _hasPermissions.value = hasAll
 
-    /**
-     * Avvia test di connessione con logging dettagliato
-     */
-    fun startConnectionTest() {
-        Log.d("BluetoothManager", "🧪 === INIZIO TEST CONNESSIONE ===")
+            val bluetoothEnabled = bluetoothAdapter?.isEnabled == true
+            _isBluetoothEnabled.value = bluetoothEnabled
 
-        val connector = getBleConnector()
-        if (connector == null) {
-            Log.e("BluetoothManager", "❌ BleConnector non disponibile")
-            return
-        }
+            updateReadyState()
 
-        Log.d("BluetoothManager", "🔍 Avvio scansione dispositivi...")
-        connector.startScan()
-
-        // Dopo 10 secondi, controlla i dispositivi trovati
-//        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-//            val devices = connector.getAvailableDevices()
-//            Log.d("BluetoothManager", "📋 Dispositivi disponibili: ${devices.size}")
-//
-//            if (devices.isNotEmpty()) {
-//                Log.d("BluetoothManager", "🎯 Tentativo connessione al primo dispositivo...")
-//                connector.connectToFirstAvailable()
-//            } else {
-//                Log.w("BluetoothManager", "⚠️ Nessun dispositivo trovato")
-//            }
-//        }, 10000)
-
-        val handler = android.os.Handler(android.os.Looper.getMainLooper())
-        val connectionChecker = object : Runnable {
-            override fun run() {
-                val isConnected = connector.isConnected()
-                Log.d("BluetoothManager", "🔄 Controllo connessione: $isConnected")
-                handler.postDelayed(this, 2000)
-            }
-        }
-        handler.postDelayed(connectionChecker, 2000)
-
-        // Dopo 10 secondi, controlla i dispositivi trovati
-        handler.postDelayed({
-            val devices = connector.getAvailableDevices()
-            Log.d("BluetoothManager", "📋 Dispositivi disponibili: ${devices.size}")
-
-            if (devices.isNotEmpty()) {
-                Log.d("BluetoothManager", "🎯 Tentativo connessione al primo dispositivo...")
-                connector.connectToFirstAvailable()
-
-                // Verifica connessione dopo 5 secondi
-                handler.postDelayed({
-                    val isConnected = connector.isConnected()
-                    Log.d("BluetoothManager", "🔍 Verifica connessione post-tentativo: $isConnected")
-                }, 5000)
+            if (hasAll && bluetoothEnabled) {
+                _initializationStatus.value = "Bluetooth pronto"
             } else {
-                Log.w("BluetoothManager", "⚠️ Nessun dispositivo trovato")
+                _initializationStatus.value = "Configurazione necessaria"
             }
-        }, 10000)
+        }
     }
 
-    /**
-     * Pulisce le risorse
-     */
+    // Metodo per richiedere permessi (da chiamare dall'Activity)
+
+    fun requestPermissions(permissionLauncher: ActivityResultLauncher<Array<String>>) {
+        context?.let { ctx ->
+            val missing = PermissionUtils.getMissingBluetoothPermissions(ctx) +
+                    PermissionUtils.getMissingLocationPermissions(ctx)
+
+            if (missing.isNotEmpty()) {
+                _initializationStatus.value = "Richiesta permessi..."
+                permissionLauncher.launch(missing.distinct().toTypedArray())
+            } else {
+                _hasPermissions.value = true
+                updateReadyState()
+            }
+        }
+    }
+
+    // Metodo per richiedere attivazione Bluetooth (da chiamare dall'Activity)
+    fun requestBluetoothEnable(bluetoothLauncher: ActivityResultLauncher<Intent>) {
+        if (bluetoothAdapter?.isEnabled == false) {
+            _initializationStatus.value = "Richiesta attivazione Bluetooth..."
+            val enableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            bluetoothLauncher.launch(enableIntent)
+        } else {
+            _isBluetoothEnabled.value = true
+            updateReadyState()
+        }
+    }
+
+
+    // Callback per gestire il risultato dei permessi
+    fun onPermissionsResult(permissions: Map<String, Boolean>) {
+        val allGranted = permissions.all { it.value }
+        _hasPermissions.value = allGranted
+
+        if (allGranted) {
+            Log.d("BluetoothManager", "✅ Tutti i permessi concessi")
+            updateReadyState()
+        } else {
+            val denied = permissions.filter { !it.value }.keys.joinToString()
+            Log.e("BluetoothManager", "❌ Permessi negati: $denied")
+            _initializationStatus.value = "Permessi negati: $denied"
+            Toast.makeText(context, "Alcuni permessi sono necessari", Toast.LENGTH_LONG).show()
+        }
+    }
+
+
+    // Callback per gestire il risultato dell'attivazione Bluetooth
+    fun onBluetoothEnableResult(isEnabled: Boolean) {
+        if (isEnabled) {
+            Log.d("BluetoothManager", "✅ Bluetooth abilitato")
+            _isBluetoothEnabled.value = true
+            updateReadyState()
+        } else {
+            Log.e("BluetoothManager", "❌ Bluetooth non abilitato")
+            _initializationStatus.value = "Bluetooth non abilitato"
+            Toast.makeText(context, "Bluetooth richiesto", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun updateReadyState() {
+        val ready = _hasPermissions.value && _isBluetoothEnabled.value
+        _isReady.value = ready
+        _initializationStatus.value = if (ready) "Bluetooth pronto" else "Non pronto"
+
+        if (ready) {
+            Log.d("BluetoothManager", "✅ BluetoothManager pronto per l'uso")
+        }
+    }
+
     fun cleanup() {
-        Log.d("BluetoothManager", "🧹 Pulizia BluetoothManager")
-        bleConnector?.cleanup()
-        bleConnector = null
+        Log.d("BluetoothManager", "🧹 Cleanup BluetoothManager")
         context = null
-        _isInitialized.value = false
+        currentActivity = null
+        _isReady.value = false
         _initializationStatus.value = "Ripulito"
-    }
-
-    /**
-     * Verifica se tutto è pronto per le operazioni BLE
-     */
-    fun isReady(): Boolean {
-        return _isInitialized.value && _isBluetoothEnabled.value && _hasPermissions.value
     }
 }

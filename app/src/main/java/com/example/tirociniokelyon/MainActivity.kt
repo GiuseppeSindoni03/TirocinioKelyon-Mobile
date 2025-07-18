@@ -9,6 +9,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,7 @@ import androidx.compose.material3.Surface
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,11 +40,11 @@ import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.Regist
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.ReservationScreen
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.SpO2Screen
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages.UserProfile
-import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.BluetoothManagerSingleton
 import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.PermissionUtils
 import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.UserSessionManager
 import com.example.tirociniokelyon.ui.theme.TirocinioKelyonTheme
 import com.example.tirociniokelyon.utils.BleConnector
+import com.example.tirociniokelyon.utils.BluetoothManagerSingleton
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -53,17 +55,20 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userSessionManager: UserSessionManager
 
-
+    // Registriamo i launcher PRIMA del ciclo di vita
+    private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var bluetoothEnableLauncher: ActivityResultLauncher<Intent>
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // IMPORTANTE: Registriamo i launcher prima di tutto
+        setupLaunchers()
 
-
-        BluetoothManagerSingleton.getInstance().initialize(this)
-
-
+        // Inizializza il BluetoothManager
+        val bluetoothManager = BluetoothManagerSingleton.getInstance()
+        bluetoothManager.initialize(this)
 
         setContent {
             TirocinioKelyonTheme(dynamicColor = false) {
@@ -73,26 +78,54 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MyApp(userSessionManager, forceLogin = false, activity = this)
+                    MyApp(userSessionManager, forceLogin = false, activity = this@MainActivity, bluetoothManager = bluetoothManager)
                 }
             }
         }
     }
 
+    private fun setupLaunchers() {
+        // Launcher per i permessi
+        permissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            BluetoothManagerSingleton.getInstance().onPermissionsResult(permissions)
+        }
 
+        // Launcher per l'attivazione Bluetooth
+        bluetoothEnableLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            val isEnabled = result.resultCode == RESULT_OK
+            BluetoothManagerSingleton.getInstance().onBluetoothEnableResult(isEnabled)
+        }
+    }
+    fun requestPermissions() {
+        BluetoothManagerSingleton.getInstance().requestPermissions(permissionLauncher)
+    }
+
+    fun requestBluetoothEnable() {
+        BluetoothManagerSingleton.getInstance().requestBluetoothEnable(bluetoothEnableLauncher)
+    }
 }
+
+
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MyApp(userSessionManager: UserSessionManager, forceLogin: Boolean = false, activity: ComponentActivity) {
+fun MyApp(userSessionManager: UserSessionManager, forceLogin: Boolean = false, activity: MainActivity,  bluetoothManager: BluetoothManagerSingleton) {
+
     val navController = rememberNavController()
 
 
     var startDestination by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
-
+    // Osserviamo lo stato del Bluetooth
+    val isBluetoothReady by bluetoothManager.isReady.collectAsState()
+    val hasPermissions by bluetoothManager.hasPermissions.collectAsState()
+    val isBluetoothEnabled by bluetoothManager.isBluetoothEnabled.collectAsState()
 
     LaunchedEffect(forceLogin) {
         if (forceLogin) {
@@ -103,6 +136,14 @@ fun MyApp(userSessionManager: UserSessionManager, forceLogin: Boolean = false, a
             val isValidSession = userSessionManager.validateSession()
             startDestination = if (isValidSession) "home" else "login"
             isLoading = false
+        }
+    }
+
+    LaunchedEffect(hasPermissions, isBluetoothEnabled) {
+        if (!hasPermissions) {
+            activity.requestPermissions()
+        } else if (!isBluetoothEnabled) {
+            activity.requestBluetoothEnable( )
         }
     }
 
