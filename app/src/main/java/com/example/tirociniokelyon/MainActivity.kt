@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 
 import androidx.navigation.compose.NavHost
@@ -212,7 +213,7 @@ fun MyApp(userSessionManager: UserSessionManager, forceLogin: Boolean = false, a
                 }
 
                 composable("medical-detection/spo2-test") {
-                    SpO2Screen(activity = activity, navController = navController)
+                    SpO2Screen(context = LocalContext.current, navController = navController)
                 }
             }
 

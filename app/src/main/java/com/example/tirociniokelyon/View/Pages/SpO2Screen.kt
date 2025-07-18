@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bloodtype
+import androidx.compose.material.icons.filled.Favorite
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,7 +23,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.ConnectedDeviceCard
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.DeviceSelectionModal
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.EmptyAnimation
+import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.MedicalDetection
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.NavBar
 import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.PermissionUtils
 import com.example.tirociniokelyon.utils.BluetoothManagerSingleton
@@ -28,7 +35,7 @@ import com.linktop.whealthService.OnBLEService
 
 @Composable
 fun SpO2Screen(
-    activity: ComponentActivity,
+    context: Context,
     navController: NavController,
     viewModel: SpO2ViewModel = viewModel()
 ) {
@@ -42,34 +49,28 @@ fun SpO2Screen(
     val isBluetoothReady by bluetoothManager.isReady.collectAsState()
     val bluetoothStatus by bluetoothManager.initializationStatus.collectAsState()
 
-    // Stato ViewModel
     val spO2Value by viewModel.spO2.collectAsState()
     val heartRate by viewModel.heartRate.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
     val isMeasuring by viewModel.isMeasuring.collectAsState()
     val deviceList by viewModel.deviceList.collectAsState()
 
-    // RIMUOVIAMO la doppia inizializzazione - il BluetoothManager è già stato inizializzato
-    // nella MainActivity
+    val connectedDevice by viewModel.connectedDevice.collectAsState() // Aggiungi questo nel ViewModel
 
 
-//    // Inizializza BluetoothManager una volta sola
-//    LaunchedEffect(Unit) {
-//        bluetoothManager.initialize(activity)
-//    }
+    var isScanning by remember { mutableStateOf(false) }
 
-//    LaunchedEffect(Unit) {
-//        try {
-//            bluetoothManager.initialize(activity)
-//        } catch (e: Exception) {
-//            Log.e("SpO2Screen", "Initialization error", e)
-//            // Mostra un messaggio all'utente
-//        }
-//    }
+
+
+
+    LaunchedEffect(isScanning) {
+        Log.d("UI", "Stato scanning: $isScanning")
+    }
+
 
     errorMessage?.let { msg ->
         AlertDialog(
-            onDismissRequest = { viewModel.clearError()},
+            onDismissRequest = { viewModel.clearError() },
             title = { Text("Errore") },
             text = { Text(msg) },
             confirmButton = {
@@ -92,14 +93,37 @@ fun SpO2Screen(
                     style = MaterialTheme.typography.displayLarge,
                     color = Color.Black
                 )
-                Text(
-                    text = "Stato: $bluetoothStatus",
-                    style = MaterialTheme.typography.bodySmall
-                )
+//                Text(
+//                    text = "Stato: $bluetoothStatus",
+//                    style = MaterialTheme.typography.bodySmall
+//                )
             }
         },
         bottomBar = {
-            NavBar(navController = navController)
+            Column {
+//                if(isConnected) {
+                Button(
+                    onClick = {
+                        if (isMeasuring) viewModel.stopMeasurement()
+                        else viewModel.startMeasurement()
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = isBluetoothReady && isConnected,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        if (isMeasuring) "Ferma Misurazione" else "Inizia Misurazione",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
+//                }
+                NavBar(navController = navController)
+            }
+
         }
     ) { padding ->
         Column(
@@ -110,196 +134,123 @@ fun SpO2Screen(
 //                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ✅ Stato connessione
-            Card {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Bluetooth abilitato: ${if (isBluetoothReady) "Sì" else "No"}")
-                    Text("Connessione: ${if (isConnected) "Connesso" else "Disconnesso"}")
 
-                    val hasPermissions = PermissionUtils.hasBluetoothPermissions(context)
-                    Text(
-                        text = "Permessi: ${if (hasPermissions) "OK" else "Mancanti"}",
-                        color = if (hasPermissions) Color.Green else Color.Red
-                    )
-
-                    if (!isConnected) {
-                        Button(
-                            onClick = {
-                                try {
-                                    if (deviceList.isEmpty()) viewModel.startScan()
-                                    else viewModel.stopScan()
-                                } catch (e: Exception) {
-                                    Log.e("UI", "❌ Crash nel click: ${e.message}", e)
-                                }
-                            },
-                            enabled = isBluetoothReady
-                        ) {
-                            Text(if (deviceList.isEmpty()) "Avvia Scansione" else "Ferma Scansione")
-                        }
-                    }
-                }
+            if (isConnected && connectedDevice != null) {
+                ConnectedDeviceCard(
+                    context = context,
+                    device = connectedDevice!!,
+                    onDisconnect = { viewModel.disconnect() }
+                )
             }
 
-            // ✅ Lista dispositivi
             if (!isConnected) {
-                Card {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Dispositivi trovati: ${deviceList.size}")
-                        if (deviceList.isEmpty()) {
-                            EmptyAnimation("Nessun dispositivo rilevato")
-                        } else {
-                            LazyColumn {
-                                items(deviceList) { device ->
-                                    DeviceListItem(
-                                        device = device,
-                                        isConnected = false,
-                                        hasBluetoothPermission = true
-                                    ) {
-                                        viewModel.connectToDevice(it)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+
+                        Text(text = "Stato Bluetooth", style = MaterialTheme.typography.titleMedium)
+
+                        Text(
+                            if (isBluetoothReady) "Bluetooth abilitato ✅" else "Bluetooth non abilitato ❌",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Stato connessione",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        Text(
+                            if (isConnected) "Connesso ✅" else "Disconnesso ❌",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+
+
+
+                        if (!isConnected) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    try {
+
+                                        // Avvia la scansione
+                                        viewModel.startScan()
+                                        isScanning = true
+
+
+//                                    if (deviceList.isEmpty()) viewModel.startScan()
+//                                    else viewModel.stopScan()
+
+                                    } catch (e: Exception) {
+                                        Log.e("UI", "❌ Crash nel click: ${e.message}", e)
                                     }
-                                }
+                                },
+                                enabled = isBluetoothReady,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                            ) {
+                                Text("Avvia Scansione")
                             }
                         }
                     }
                 }
-            }
 
-            // ✅ Rilevazione attiva
-            if (isConnected) {
-                Button(
-                    onClick = {
-                        if (isMeasuring) viewModel.stopMeasurement()
-                        else viewModel.startMeasurement()
-                    },
-                    enabled = isBluetoothReady
-                ) {
-                    Text(if (isMeasuring) "Ferma Misurazione" else "Inizia Misurazione")
-                }
 
-                if (isMeasuring) {
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("SpO₂: $spO2Value%", style = MaterialTheme.typography.headlineSmall)
-                            Text("HR: $heartRate bpm", style = MaterialTheme.typography.headlineSmall)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            } else {
+
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White
+                        )
+                    ) {
+                        if (isMeasuring) {
+                            MedicalDetection(spO2Value = spO2Value, heartRate = heartRate)
+
+
                         }
+
+                        else
+                        Text(text = "Nessuna rilevazione al momento...")
+
                     }
-                }
+
             }
         }
     }
-}
 
-
-@Composable
-fun DeviceListItem(
-    device: OnBLEService.DeviceSort,
-    isConnected: Boolean,
-    hasBluetoothPermission: Boolean,
-    onDeviceClick: (OnBLEService.DeviceSort) -> Unit
-) {
-    val context = LocalContext.current
-
-    Log.d("DEVICE", "Dispositivo collegato $device")
-
-    val deviceName = remember(device, hasBluetoothPermission) {
-        if (hasBluetoothPermission) {
-            try {
-                device.bleDevice.name ?: "Dispositivo sconosciuto"
-            } catch (e: SecurityException) {
-                "Dispositivo sconosciuto"
+    if (isScanning) {
+        DeviceSelectionModal(
+            deviceList = deviceList,
+            onDeviceSelected = { device ->
+                viewModel.connectToDevice(device)
+                isScanning = false
+            },
+            onDismiss = {
+                isScanning = false
+                viewModel.stopScan()
             }
-        } else {
-            "Dispositivo sconosciuto"
-        }
-    }
-    val deviceAddress = remember(device, hasBluetoothPermission) {
-        if (hasBluetoothPermission) {
-            try {
-                device.bleDevice.address ?: "Indirizzo non disponibile"
-            } catch (e: SecurityException) {
-                "Indirizzo non disponibile"
-            }
-        } else {
-            "Indirizzo non disponibile"
-        }
-    }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = {
-            if (!isConnected) {
-                onDeviceClick(device)
-            }
-        },
-        enabled = !isConnected && hasBluetoothPermission,
-        colors = CardDefaults.cardColors(
-            containerColor = if (isConnected)
-                MaterialTheme.colorScheme.surfaceVariant
-            else
-                MaterialTheme.colorScheme.surface
         )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = deviceName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = deviceAddress,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (device.rssi != null) {
-                    Text(
-                        text = "RSSI: ${device.rssi} dBm",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-
-        }
     }
 }
 
-
-private fun getDeviceName(context: Context, device: OnBLEService.DeviceSort): String {
-    return try {
-        if (PermissionUtils.hasBluetoothPermissions(context)) {
-            device.bleDevice.name ?: "Nome sconosciuto"
-        } else {
-            "Permessi necessari"
-        }
-    } catch (e: SecurityException) {
-        "Permessi insufficienti"
-    } catch (e: Exception) {
-        "Nome sconosciuto"
-    }
-}
-
-private fun getDeviceAddress(context: Context, device: OnBLEService.DeviceSort): String {
-    return try {
-        if (PermissionUtils.hasBluetoothPermissions(context)) {
-            device.bleDevice.address ?: "Indirizzo non disponibile"
-        } else {
-            "Permessi necessari"
-        }
-    } catch (e: SecurityException) {
-        "Permessi insufficienti"
-    } catch (e: Exception) {
-        "Indirizzo non disponibile"
-    }
-}

@@ -42,6 +42,10 @@ class SpO2ViewModel(application: Application) : AndroidViewModel(application) {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    private val _connectedDevice = MutableStateFlow<OnBLEService.DeviceSort?>(null)
+    val connectedDevice: StateFlow<OnBLEService.DeviceSort?> = _connectedDevice.asStateFlow()
+
+
     init {
         Log.d("SpO2ViewModel", "🔧 ViewModel inizializzato")
 
@@ -158,10 +162,14 @@ class SpO2ViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 Log.d("SpO2ViewModel", "🔗 Connessione al dispositivo...")
+                _connectedDevice.value = device
                 bleConnector.connectToDevice(device)
             } catch (e: Exception) {
                 Log.e("SpO2ViewModel", "Errore durante la connessione", e)
                 _errorMessage.value = "Errore di connessione: ${e.message}"
+
+                _connectedDevice.value = null
+
             }
         }
     }
@@ -171,6 +179,9 @@ class SpO2ViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 bleConnector.disconnect()
                 _isMeasuring.value = false
+
+                _connectedDevice.value = null
+
             } catch (e: Exception) {
                 Log.e("SpO2ViewModel", "Errore durante la disconnessione", e)
                 _errorMessage.value = "Errore di disconnessione: ${e.message}"
