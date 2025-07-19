@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-private fun ShortcutCard(
+ fun ShortcutCard(
     icon: ImageVector,
     title: String,
     subtitle: String,
