@@ -1,5 +1,6 @@
 package com.example.tirociniokelyon.com.example.tirociniokelyon.ViewModel
 
+import android.util.Log
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.MedicalDetection
 import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.Repository.MedicalDetectionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class LastDetectionState (
+data class LastDetectionState(
     val lastSPO2: MedicalDetection? = null,
     val lastHR: MedicalDetection? = null,
     val lastTemperature: MedicalDetection? = null,
@@ -21,9 +22,9 @@ data class LastDetectionState (
     val error: String? = null
 )
 
-data class MedicalDetectionsState (
-    val medicalDetections : List<MedicalDetection>? = null,
-    val currentType: String ? = "WEEK",
+data class MedicalDetectionsState(
+    val medicalDetections: List<MedicalDetection>? = null,
+    val currentType: String? = "WEEK",
     val currentView: String? = "MONTH",
     val isLoading: Boolean = false,
     val error: String? = null
@@ -31,9 +32,14 @@ data class MedicalDetectionsState (
 
 @HiltViewModel
 class MedicalDetectionViewModel @Inject
-constructor( private val repository: MedicalDetectionRepository,
+constructor(
+    private val repository: MedicalDetectionRepository,
 
-    ): ViewModel(){
+    ) : ViewModel() {
+
+
+
+
 
     private val _lastDetectionState = MutableStateFlow(LastDetectionState())
     val lastDetectionState: StateFlow<LastDetectionState> = _lastDetectionState
@@ -41,16 +47,37 @@ constructor( private val repository: MedicalDetectionRepository,
     private val _medicalDetectionsState = MutableStateFlow(MedicalDetectionsState())
     val medicalDetectionsState: StateFlow<MedicalDetectionsState> = _medicalDetectionsState
 
+
+    init {
+        loadLastDetections()
+
+    }
+
+
     // 🔹 Carica ultima rilevazione per ogni tipo
-    fun loadLastDetections() {
+    private fun loadLastDetections() {
+
         viewModelScope.launch {
-            _lastDetectionState.update { it.copy(isLoading = true, error = null) }
 
             try {
+                Log.d("VIEWMODEL", "Setting loading state")
+
+                _lastDetectionState.takeIf { it != null }?.update {
+                    it.copy(isLoading = true, error = null)
+                } ?: run {
+                    Log.e("VIEWMODEL", "_lastDetectionState è null al primo update!")
+                    return@launch
+                }
+
+                Log.d("VIEWMODEL", "Calling repository methods")
+
                 val spo2 = repository.getLastMedicalDetection("SPO2").getOrNull()
                 val hr = repository.getLastMedicalDetection("HR").getOrNull()
                 val temperature = repository.getLastMedicalDetection("TEMPERATURE").getOrNull()
                 val weight = repository.getLastMedicalDetection("WEIGHT").getOrNull()
+
+                Log.d("VIEWMODEL", "Repository results - SPO2: $spo2, HR: $hr")
+
 
                 _lastDetectionState.update {
                     it.copy(
@@ -63,13 +90,14 @@ constructor( private val repository: MedicalDetectionRepository,
                     )
                 }
             } catch (e: Exception) {
+                Log.e("VIEWMODEL", "Errore in loadLastDetections: ${e.message}", e)
                 _lastDetectionState.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }
 
     // 🔹 Carica tutte le rilevazioni con filtri opzionali
-    fun loadMedicalDetections(
+    private fun loadMedicalDetections(
         type: String = "ALL",
         startDate: String? = null,
         endDate: String? = null

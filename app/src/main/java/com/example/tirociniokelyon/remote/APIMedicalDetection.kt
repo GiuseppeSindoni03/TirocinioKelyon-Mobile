@@ -1,6 +1,7 @@
 package com.example.tirociniokelyon.com.example.tirociniokelyon.remote
 
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.DTO.CreateMedicalDetectionDTO
+import com.example.tirociniokelyon.com.example.tirociniokelyon.model.DTO.MedicalDetectionDTO
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.MedicalDetection
 import retrofit2.Response
 import retrofit2.http.Body
@@ -21,7 +22,7 @@ interface APIMedicalDetection {
     @GET("medical-detection/last")
     suspend fun getLastDetection(
         @Query("type") type: String
-    ) : Response<MedicalDetection>
+    ) : Response<MedicalDetectionDTO>
 
     @POST("medical-detection")
     suspend fun postMedicalDetection (

@@ -80,5 +80,11 @@ object NetworkModule {
     fun provideAPIreservation(retrofit: Retrofit): APIreservation {
         return retrofit.create(APIreservation::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideAPIMedicalDetection(retrofit: Retrofit): APIMedicalDetection {
+        return retrofit.create(APIMedicalDetection::class.java)
+    }
 }
 

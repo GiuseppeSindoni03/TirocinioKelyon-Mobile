@@ -1,6 +1,7 @@
 package com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
@@ -21,18 +22,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.CardDefaults.shape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
@@ -44,8 +54,6 @@ data class NavItem(
     val iconOutlined: ImageVector,
     val iconFilled: ImageVector
 )
-
-
 
 
 @Composable
@@ -62,23 +70,37 @@ fun NavBar(navController: NavController) {
         NavItem("medical-detection/list", Icons.Outlined.MonitorHeart, Icons.Filled.MonitorHeart),
         NavItem("user-profile", Icons.Outlined.Person, Icons.Filled.Person),
 
-    )
+        )
 
     val fabScreens = listOf("reservation/list", "medical-detection/list")
     val showFab = currentRoute in fabScreens
 
-    Box {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 8.dp, end = 8.dp,  bottom = 40.dp),
+        contentAlignment = Alignment.Center
+
+    ) {
         NavigationBar(
             containerColor = MaterialTheme.colorScheme.secondary,
             tonalElevation = 8.dp,
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
-                .heightIn(max = 70.dp)
+                .height(64.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(16.dp)
+                ).align(Alignment.Center),
+
+
+
         ) {
             items.forEach { item ->
                 val selected = currentRoute == item.route
                 NavigationBarItem(
+                    modifier = Modifier.padding(top = 8.dp),
                     selected = selected,
                     onClick = {
                         if (!selected) {
@@ -91,7 +113,7 @@ fun NavBar(navController: NavController) {
                         Icon(
                             imageVector = if (selected) item.iconFilled else item.iconOutlined,
                             contentDescription = null,
-                            modifier = Modifier.size(30.dp)
+                            modifier = Modifier.size(26.dp)
                         )
                     },
                     colors = NavigationBarItemDefaults.colors(
@@ -117,10 +139,8 @@ fun NavBar(navController: NavController) {
                             }
 
 
-
                     }
                 },
-
 
 
                 containerColor = MaterialTheme.colorScheme.secondary,
@@ -136,6 +156,7 @@ fun NavBar(navController: NavController) {
 
     }
 }
+
 @Preview(showBackground = false, name = "NavBar Preview")
 @Composable
 fun NavBarPreview() {

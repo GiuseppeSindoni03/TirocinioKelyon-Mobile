@@ -2,6 +2,7 @@ package com.example.tirociniokelyon.com.example.tirociniokelyon.remote.Repositor
 
 import android.util.Log
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.DTO.CreateMedicalDetectionDTO
+import com.example.tirociniokelyon.com.example.tirociniokelyon.model.DTO.MedicalDetectionDTO
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.MedicalDetection
 import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.APIMedicalDetection
 import retrofit2.Response
@@ -18,22 +19,29 @@ class MedicalDetectionRepository @Inject constructor(
         type: String
     ): Result<MedicalDetection> {
         return try {
-            Log.d("DETECTION", "Chimata getLastMedicalDetection")
+            Log.d("DETECTION", "Chimaata getLastMedicalDetection Type: $type")
 
             val response = api.getLastDetection(type)
 
+            Log.d("DETECTION", "Response ricevuta, isSuccessful: ${response.isSuccessful}")
+
+
             if (response.isSuccessful) {
-                response.body()?.let { detection ->
+                val body = response.body()
+                Log.d("DETECTION", "Response body: $body")
+                body?.let { detection ->
+                    Log.d("DETECTION", "Detection trovata: ${detection.detection}")
 
+                    Result.success(detection.detection)
+                } ?: run {  Log.e("DETECTION", "Response body è null"); Result.failure(Exception("Empty response"));
 
-                    Result.success(detection)
-                } ?: Result.failure(Exception("Empty response"))
+                }
             } else {
-                Log.d("DETECTION", "${response.message()}")
+                Log.e("DETECTION", "Response non successful: ${response.message()}, code: ${response.code()}")
                 Result.failure(Exception("Created response Failed: ${response.message()} ${response.code()} ${response.errorBody()}"))
             }
         } catch (e: Exception) {
-            Log.d("DETECTION", "Errore getLastDetection ${e.message}")
+            Log.e("DETECTION", "Errore getLastDetection: ${e.message}", e)
             Result.failure(e)
         }
     }

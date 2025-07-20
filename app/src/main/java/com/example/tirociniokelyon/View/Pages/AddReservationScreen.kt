@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -103,7 +105,11 @@ fun AddReservationScreen(navController: NavController) {
             }
         },
         bottomBar = {
-            Column {
+            Column (
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
                 Button(
                     onClick = {
                         viewModel.createReservation()
@@ -111,9 +117,12 @@ fun AddReservationScreen(navController: NavController) {
                     },
 
                     shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
 
+                    ),
                     enabled = selectedDay != null && selectedSlot != null,
-                    modifier = Modifier
+                    modifier = Modifier.width(200.dp)
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Text(
