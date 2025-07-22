@@ -28,15 +28,15 @@ import com.example.tirociniokelyon.com.example.tirociniokelyon.ViewModel.Reserva
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ReservationScreen (navController: NavController) {
-    
+fun ReservationScreen(navController: NavController) {
+
     val viewModel: ReservationViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
     val listState by viewModel.listState.collectAsState()
 
 
-    Scaffold (
+    Scaffold(
         topBar = {
             Column(
                 modifier = Modifier
@@ -60,10 +60,10 @@ fun ReservationScreen (navController: NavController) {
         bottomBar = {
             NavBar(navController = navController)
         }
-    ) {
-        paddingValues ->  Column (
+    ) { paddingValues ->
+        Column(
             modifier = Modifier.padding(paddingValues)
-        ){
+        ) {
 
             when {
                 uiState.isLoading -> {
@@ -75,24 +75,30 @@ fun ReservationScreen (navController: NavController) {
                 }
 
 
-
-
-
-
                 else -> {
-                    if( uiState.nextReservations != null && uiState.doctor != null) {
-                        NextReservations(reservations = uiState.nextReservations!!, doctor = uiState.doctor!!)
+                    if (uiState.nextReservations != null && uiState.doctor != null) {
+                        NextReservations(
+                            reservations = uiState.nextReservations!!,
+                            doctor = uiState.doctor!!
+                        )
 
                     }
 
 
-                    if ( listState.reservations != null && uiState.doctor != null)  {
-                        ReservationsList(reservations = listState.reservations!!, doctor = uiState.doctor!!, onStatusChange =   { status: ReservationStatus -> viewModel.changeReservationStatus(status) }, currentStatus = listState.currentStatus )
+                    if (listState.reservations != null && uiState.doctor != null) {
+                        ReservationsList(
+                            reservations = listState.reservations!!,
+                            doctor = uiState.doctor!!,
+                            onStatusChange = { status: ReservationStatus ->
+                                viewModel.changeReservationStatus(status)
+                            },
+                            currentStatus = listState.currentStatus
+                        )
                     }
                 }
             }
 
-    }
+        }
     }
 }
 

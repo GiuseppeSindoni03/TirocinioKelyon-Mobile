@@ -2,44 +2,31 @@ package com.example.tirociniokelyon.com.example.tirociniokelyon.View.Pages
 
 import android.content.Context
 import android.util.Log
-import androidx.activity.ComponentActivity
 import com.example.tirociniokelyon.com.example.tirociniokelyon.ViewModel.SpO2ViewModel
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bloodtype
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Save
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.ConnectedDeviceCard
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.DeviceSelectionModal
-import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.EmptyAnimation
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.MedicalDetection
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.MedicalDetectionCompleted
 import com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components.NavBar
-import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.PermissionUtils
 import com.example.tirociniokelyon.utils.BluetoothManagerSingleton
-import com.linktop.whealthService.OnBLEService
 
 
 @Composable
 fun SpO2Screen(
     context: Context,
     navController: NavController,
-    viewModel: SpO2ViewModel = viewModel()
+    viewModel: SpO2ViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
 
@@ -178,38 +165,36 @@ fun SpO2Screen(
                         )
 
                         Text(
-                            if (isConnected) "Connesso ✅" else "Disconnesso ❌",
+                            "Disconnesso ❌",
                             style = MaterialTheme.typography.bodyLarge
                         )
 
 
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                try {
 
-                        if (!isConnected) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(
-                                onClick = {
-                                    try {
-
-                                        // Avvia la scansione
-                                        viewModel.startScan()
-                                        isScanning = true
+                                    // Avvia la scansione
+                                    viewModel.startScan()
+                                    isScanning = true
 
 
 //                                    if (deviceList.isEmpty()) viewModel.startScan()
 //                                    else viewModel.stopScan()
 
-                                    } catch (e: Exception) {
-                                        Log.e("UI", "❌ Crash nel click: ${e.message}", e)
-                                    }
-                                },
-                                enabled = isBluetoothReady,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp)
-                            ) {
-                                Text("Avvia Scansione")
-                            }
+                                } catch (e: Exception) {
+                                    Log.e("UI", "❌ Crash nel click: ${e.message}", e)
+                                }
+                            },
+                            enabled = isBluetoothReady,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                        ) {
+                            Text("Avvia Scansione")
                         }
+
                     }
                 }
 
@@ -217,32 +202,34 @@ fun SpO2Screen(
             } else {
 
 
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.White
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    )
+                ) {
+                    if (isMeasuring) {
+                        MedicalDetection(spO2Value = spO2Value, heartRate = heartRate)
+                    } else if (measurementCompleted && spO2Value > 0 && heartRate > 0) {
+                        // Mostra i risultati della misurazione con il pulsante Salva
+                        MedicalDetectionCompleted(
+                            spO2Value = spO2Value,
+                            heartRate = heartRate,
+                            onSaveDetection = { viewModel.saveMeasurement({navController.navigate("medical-detection/list"); }, {}) })
+
+
+                    } else {
+                        Text(
+                            text = "Nessuna rilevazione al momento...",
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(16.dp)
                         )
-                    ) {
-                        if (isMeasuring) {
-                            MedicalDetection(spO2Value = spO2Value, heartRate = heartRate)
-                        }
-                        else if (measurementCompleted && spO2Value > 0 && heartRate > 0) {
-                                // Mostra i risultati della misurazione con il pulsante Salva
-                                MedicalDetectionCompleted(spO2Value = spO2Value, heartRate = heartRate, onSaveDetection = { viewModel.saveMeasurement() })
-
-
-                            } else {
-                                Text(
-                                    text = "Nessuna rilevazione al momento...",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    modifier = Modifier.padding(16.dp)
-                                )
-                            }
-
                     }
+
+                }
 
             }
         }

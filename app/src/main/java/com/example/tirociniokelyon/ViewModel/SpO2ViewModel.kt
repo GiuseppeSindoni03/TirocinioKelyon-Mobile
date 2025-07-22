@@ -5,21 +5,34 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tirociniokelyon.com.example.tirociniokelyon.model.DTO.CreateMedicalDetectionDTO
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.Device
+import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.Repository.MedicalDetectionRepository
 import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.PermissionUtils
 import com.example.tirociniokelyon.utils.BleConnector
 import com.example.tirociniokelyon.utils.BluetoothManagerSingleton
 import com.linktop.infs.OnSpO2ResultListener
 import com.linktop.whealthService.OnBLEService
 import dagger.hilt.android.internal.Contexts.getApplication
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+import javax.inject.Inject
 
 
-class SpO2ViewModel(application: Application) : AndroidViewModel(application) {
+
+@HiltViewModel
+class SpO2ViewModel @Inject constructor(
+    application: Application,
+    private val repository: MedicalDetectionRepository
+) : AndroidViewModel(application) {
 
     private val bleConnector = BleConnector(application)
 
@@ -176,20 +189,41 @@ class SpO2ViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun saveMeasurement() {
+    fun saveMeasurement(onSuccess: () -> Unit, onFailure: () -> Unit) {
         viewModelScope.launch {
             try {
                 Log.d("SpO2ViewModel", "💾 Salvataggio misurazione: SpO₂=${_spO2.value}%, HR=${_heartRate.value}bpm")
 
-                // Qui implementerai le chiamate API per salvare la misurazione
-                // Esempio:
-                // apiService.saveMeasurement(
-                //     spO2 = _spO2.value,
-                //     heartRate = _heartRate.value,
-                //     timestamp = System.currentTimeMillis()
-                // )
+                val utcFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+                utcFormat.timeZone = TimeZone.getTimeZone("UTC")
 
-                // Per ora, reset dello stato dopo il salvataggio
+                val currentTimestamp = utcFormat.format(Date())
+
+
+                val medicalDetectionSpO2 = CreateMedicalDetectionDTO(
+                    value = _spO2.value.toString(),
+                    type = "SPO2",
+                    date =  currentTimestamp,
+                )
+                val medicalDetectionHR = CreateMedicalDetectionDTO(
+                    value = _heartRate.value.toString(),
+                    type = "HR",
+                    date =  currentTimestamp,
+                )
+
+                val resultSpO2 = repository.postMedicalDetection(medicalDetectionSpO2)
+
+                resultSpO2.fold(
+                    onSuccess = {
+                        Log.d("SpO2ViewModel", "✅ SpO2 salvato con successo")
+                        saveHeartRate(medicalDetectionHR, onSuccess, onFailure)
+                    },
+                    onFailure = { error ->
+                        Log.e("SpO2ViewModel", "❌ Errore salvataggio SpO2: $error")
+                        onFailure()
+                    }
+                )
+
                 _measurementCompleted.value = false
                 _spO2.value = 0
                 _heartRate.value = 0
@@ -201,6 +235,29 @@ class SpO2ViewModel(application: Application) : AndroidViewModel(application) {
                 _errorMessage.value = "Errore salvataggio: ${e.message}"
             }
         }
+    }
+
+    private suspend fun saveHeartRate(
+        medicalDetectionHR: CreateMedicalDetectionDTO,
+        onSuccess: () -> Unit,
+        onFailure: () -> Unit
+    ) {
+        val resultHR = repository.postMedicalDetection(medicalDetectionHR)
+
+        resultHR.fold(
+            onSuccess = {
+                Log.d("SpO2ViewModel", "✅ HR salvato con successo")
+                // Reset values only after both are saved successfully
+                _measurementCompleted.value = false
+                _spO2.value = 0
+                _heartRate.value = 0
+                onSuccess()
+            },
+            onFailure = { error ->
+                Log.e("SpO2ViewModel", "❌ Errore salvataggio HR: $error")
+                onFailure()
+            }
+        )
     }
 
     fun startMeasurement() {

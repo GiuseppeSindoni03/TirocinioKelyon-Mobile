@@ -33,9 +33,6 @@ import java.util.*
 @Composable
 fun NextReservations (reservations: List<Reservation>, doctor: Doctor) {
 
-
-
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -43,13 +40,16 @@ fun NextReservations (reservations: List<Reservation>, doctor: Doctor) {
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top
     ) {
-        Text(
-            text = if(reservations.size > 1 ) "Prossimi appuntamenti" else "Prossimi appuntamento",
-            modifier = Modifier
-                .padding(top = 8.dp),
-            style = MaterialTheme.typography.titleLarge,
-            color = Color.Black,
-        )
+
+
+        if(reservations.isNotEmpty())
+            Text(
+                text = if(reservations.size > 1 ) "Prossimi appuntamenti" else "Prossimo appuntamento",
+                modifier = Modifier
+                    .padding(top = 8.dp),
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.Black,
+            )
 
         LazyRow ( horizontalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(horizontal = 4.dp),

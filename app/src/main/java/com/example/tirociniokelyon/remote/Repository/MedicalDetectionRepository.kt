@@ -3,6 +3,7 @@ package com.example.tirociniokelyon.com.example.tirociniokelyon.remote.Repositor
 import android.util.Log
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.DTO.CreateMedicalDetectionDTO
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.DTO.MedicalDetectionDTO
+import com.example.tirociniokelyon.com.example.tirociniokelyon.model.DTO.MedicalDetectionsDTO
 import com.example.tirociniokelyon.com.example.tirociniokelyon.model.MedicalDetection
 import com.example.tirociniokelyon.com.example.tirociniokelyon.remote.APIMedicalDetection
 import retrofit2.Response
@@ -50,7 +51,7 @@ class MedicalDetectionRepository @Inject constructor(
         type: String,
         startDate: String?,
         endDate: String?
-    ): Result<List<MedicalDetection>> {
+    ): Result<MedicalDetectionsDTO> {
         Log.d("DETECTION", "Inizio getLastDetection Repo")
 
         return try {
@@ -58,14 +59,28 @@ class MedicalDetectionRepository @Inject constructor(
 
 
             if (response.isSuccessful) {
-                response.body()?.let { detections ->
+                response.body()?.let { response ->
 
 
-                    Result.success(detections)
+                    Result.success(response)
                 } ?: Result.failure(Exception("Empty response"))
             } else {
-                Log.d("DETECTION", "${response.message()}")
-                Result.failure(Exception("Created response Failed: ${response.message()} ${response.code()} ${response.errorBody()}"))
+
+                when (response.code()) {
+                    400 -> {
+                        Log.d("DETECTION", "Bad request: ${response.message()}")
+                        Result.failure(Exception("Bad request: ${response.message()}"))
+                    }
+                    404 -> {
+                        // Return success with empty detections list for 404
+                        Log.d("DETECTION", "No detections found (404)")
+                        Result.success(MedicalDetectionsDTO(detections = emptyList(), total = 0))
+                    }
+                    else -> {
+                        Log.d("DETECTION", "${response.message()}")
+                        Result.failure(Exception("Request failed: ${response.message()} ${response.code()}"))
+                    }
+                }
             }
         } catch (e: Exception) {
             Log.d("DETECTION", "Errore get detection ${e.message}")

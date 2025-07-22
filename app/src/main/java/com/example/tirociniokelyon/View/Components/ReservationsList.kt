@@ -73,7 +73,6 @@ fun ReservationsList (
                 ReservationStatus.DECLINED
             )
 
-//            Log.d("DEBUG", "CurrentStatus = $currentStatus")
 
 
             statusOptions.forEachIndexed { index, status ->

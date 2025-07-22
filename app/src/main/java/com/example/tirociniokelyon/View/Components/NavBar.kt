@@ -1,7 +1,6 @@
 package com.example.tirociniokelyon.com.example.tirociniokelyon.View.Components
 
 import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
@@ -24,29 +23,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.CardDefaults.shape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
-import com.example.tirociniokelyon.com.example.tirociniokelyon.utils.PermissionUtils
 
 
 data class NavItem(
@@ -57,12 +57,14 @@ data class NavItem(
 
 
 @Composable
-fun NavBar(navController: NavController) {
+fun NavBar(navController: NavController, openFormModal: () -> Unit = {}) {
     val context = LocalContext.current
 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
     Log.d("DEBUG", "Current Route: $currentRoute")
+
+    var expanded by remember { mutableStateOf(false) }
 
     val items = listOf(
         NavItem("home", Icons.Outlined.Home, Icons.Filled.Home),
@@ -128,42 +130,66 @@ fun NavBar(navController: NavController) {
         }
 
         if (showFab) {
-            FloatingActionButton(
-                onClick = {
-                    when (currentRoute) {
-                        "reservation/list" -> navController.navigate("reservation/add")
-                        "medical-detection/list" ->
+            Box {
 
-                            if (PermissionUtils.hasBluetoothPermissions(context)) {
+                if (expanded) {
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Rilevazione tramite dispositivo") },
+                            onClick = {
                                 navController.navigate("medical-detection/spo2-test")
                             }
-
-
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Rilevazione manuale") },
+                            onClick = {
+                                openFormModal()
+                                expanded = false
+                            }
+                        )
                     }
-                },
+                }
+                FloatingActionButton(
+                    onClick = {
+                        when (currentRoute) {
+                            "reservation/list" -> navController.navigate("reservation/add")
+                            "medical-detection/list" -> expanded = true
+
+//                                if (PermissionUtils.hasBluetoothPermissions(context)) {
+//                                    navController.navigate("medical-detection/spo2-test")
+//                                }
 
 
-                containerColor = MaterialTheme.colorScheme.secondary,
-                contentColor = Color.White,
-                shape = CircleShape,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = (-20).dp)
-            ) {
-                Icon(Icons.Outlined.Add, contentDescription = "Add")
+                        }
+                    },
+
+
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = Color.White,
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .offset(y = (-20).dp)
+                ) {
+                    Icon(Icons.Outlined.Add, contentDescription = "Add")
+                }
             }
+
         }
 
     }
 }
 
-@Preview(showBackground = false, name = "NavBar Preview")
-@Composable
-fun NavBarPreview() {
-    val navController = rememberNavController()
-
-    // Finta composable per test visivo
-    Box(modifier = Modifier.heightIn(max = 100.dp)) {
-        NavBar(navController = navController)
-    }
-}
+//@Preview(showBackground = false, name = "NavBar Preview")
+//@Composable
+//fun NavBarPreview() {
+//    val navController = rememberNavController()
+//
+//    // Finta composable per test visivo
+//    Box(modifier = Modifier.heightIn(max = 100.dp)) {
+//        NavBar(navController = navController)
+//    }
+//}

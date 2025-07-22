@@ -116,7 +116,8 @@ fun MiniReservationCard(
                 verticalArrangement = Arrangement.SpaceEvenly
             ) {
 
-                val visitType = if (reservation.visitType == "FIRST_VISIT") "Prima visita" else "Controllo"
+                val visitType =
+                    if (reservation.visitType == "FIRST_VISIT") "Prima visita" else "Controllo"
                 Text(
                     text = visitType,
                     style = MaterialTheme.typography.titleMedium,
@@ -145,54 +146,44 @@ fun MiniReservationCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
 
-                            Box(
-                                modifier = Modifier
-                                    .size(12.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(imageVector = Icons.Outlined.AccessTime, contentDescription = "clock")
-
-                            }
-                            Text(
-                                text = time,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AccessTime,
+                                contentDescription = "clock"
                             )
 
+                        }
+                        Text(
+                            text = time,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
 
 
-                            Box(
-                                modifier = Modifier
-                                    .size(12.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(imageVector = Icons.Outlined.LocationOn, contentDescription = "clock")
 
-                            }
-                            Text(
-                                text = doctor.medicalOffice.toString(),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.LocationOn,
+                                contentDescription = "clock"
                             )
 
-//                        Box(
-//                            modifier = Modifier
-//                                .size(12.dp),
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            Icon(imageVector = Icons.Outlined.LocationOn, contentDescription = "clock")
-//
-//                        }
-//                        Text(
-//                            text = reservation.status,
-//                            style = MaterialTheme.typography.bodySmall,
-//                            color = Color.Gray
-//                        )
-
+                        }
+                        Text(
+                            text = doctor.medicalOffice.toString(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
 
                     }
-                     }
-
+                }
 
 
             }
